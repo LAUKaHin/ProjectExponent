@@ -1,4 +1,4 @@
-# 📊 COMP2012 Enhanced Trading Bot with Comprehensive Stock Analysis
+# 📊 ProjectExponent (0.0.3 Gamma)
 
 ![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
