@@ -21,7 +21,7 @@ This project implements a comprehensive stock analysis and trading system follow
 
 ## 🏗 System Architecture
 
-### Core Pattern: COMP2012 Inheritance Structure
+### Core Pattern: Inheritance Structure
 
 ```
 Market (Base Class)
@@ -44,7 +44,7 @@ Raw Stock Data → Prediction Models → Strategy Testing → Stability Analysis
 ## 📁 File Structure
 
 ```
-📦 COMP2012-Enhanced-Trading-Bot
+📦 ProjectExponent
 ├── 📄 PA2.py                     # Main entry point with 8 operations
 ├── 📄 Market.py                  # Base Market class, StockPredictor, data fetching
 ├── 📄 Strategy.py                # Trading strategies (MR, TF, WTF)
@@ -408,7 +408,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **COMP2012** course structure and OOP design patterns
 - **yfinance** for reliable stock data
 - **Alpaca Markets** for trading API
 - **OpenRouter** for GenAI integration
