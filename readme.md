@@ -1,4 +1,4 @@
-# 📊 ProjectExponent (0.0.3 Gamma)
+# 📊 ProjectExponent (0.0.4 Delta)
 
 ![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
