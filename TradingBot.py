@@ -293,7 +293,7 @@ class AutomatedTradingSystemLoop:
         
         # Load pre-analyzed stock data from CSV
         self.stock_database = self._load_stock_database()
-        self.sp500_symbols = self.get_sp500_symbols()
+        self.sp500_symbols = self.get_sp500_symbols()  # ✅ Now this method exists
         
         # Trading state
         self.active_positions = {}
@@ -307,33 +307,40 @@ class AutomatedTradingSystemLoop:
         
         print(f"🚀 Automated Trading System Initialized")
         print(f"📊 Loaded {len(self.stock_database)} stocks from database")
+        print(f"📈 Tracking {len(self.sp500_symbols)} S&P 500 symbols")
         print(f"💰 Paper Trading: {paper_trading}")
         
     
     def _load_stock_database(self) -> Dict[str, Dict]:
         """Load stock analysis data from CSV - NO TRY-EXCEPT"""
-        results = ResultsManager.load_from_csv()
-        stock_db = {}
-        
-        for stock in results:
-            symbol = stock.get('symbol', '')
-            if symbol:
-                winner = stock.get('winner', 'GBM')
-                best_strategy_name = stock.get(f'best_strategy_{winner.lower()}', 'Unknown')
-                
-                stock_db[symbol] = {
-                    'grade': stock.get('grade', 'F'),
-                    'score': stock.get('score', 0.0),
-                    'rank': stock.get('rank', 999),
-                    'best_strategy_name': best_strategy_name,
-                    'winner': winner,
-                    'percentage_return': max(
-                        stock.get('percentage_return_gbm', 0.0),
-                        stock.get('percentage_return_ml', 0.0)
-                    )
-                }
-        
-        return stock_db
+        try:
+            results = ResultsManager.load_from_csv()
+            stock_db = {}
+            
+            for stock in results:
+                symbol = stock.get('symbol', '')
+                if symbol:
+                    winner = stock.get('winner', 'GBM')
+                    best_strategy_name = stock.get(f'best_strategy_{winner.lower()}', 'Unknown')
+                    
+                    stock_db[symbol] = {
+                        'grade': stock.get('grade', 'F'),
+                        'score': stock.get('score', 0.0),
+                        'rank': stock.get('rank', 999),
+                        'best_strategy_name': best_strategy_name,
+                        'winner': winner,
+                        'percentage_return': max(
+                            stock.get('percentage_return_gbm', 0.0),
+                            stock.get('percentage_return_ml', 0.0)
+                        )
+                    }
+            
+            return stock_db
+            
+        except Exception as e:
+            print(f"⚠️  Error loading stock database: {e}")
+            print("📊 Using empty database")
+            return {}
     
     def _is_market_open(self) -> bool:
         """Check if market is currently open"""
@@ -393,16 +400,35 @@ class AutomatedTradingSystemLoop:
         print("\n📋 FINAL ACCOUNT STATUS:")
         self.trading_bot.display_all_holdings()
         
-    def _load_stock_database(self) -> Dict[str, Dict]:
-        """Load stock analysis data from CSV - NO TRY-EXCEPT"""
+        
+    def get_sp500_symbols(self) -> List[str]:
+        """Get S&P 500 symbols from Wikipedia"""
         try:
-            # Import here to avoid circular import
-            from Analysis.SP500Data import SP500DataProvider
-            results = ResultsManager.load_from_csv()
-            # ... rest of the method remains the same
-        except ImportError:
-            print("⚠️  SP500DataProvider not available, using empty database")
-            return {}
+            import pandas as pd
+            url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+            tables = pd.read_html(url)
+            sp500_table = tables[0]
+            symbols = sp500_table['Symbol'].tolist()
+            
+            # Clean symbols (replace . with -)
+            cleaned_symbols = []
+            for symbol in symbols:
+                cleaned_symbol = str(symbol).replace('.', '-')
+                cleaned_symbols.append(cleaned_symbol)
+            
+            print(f"📊 Loaded {len(cleaned_symbols)} S&P 500 symbols")
+            return cleaned_symbols
+            
+        except Exception as e:
+            print(f"❌ Error fetching S&P 500 symbols: {e}")
+            print("📊 Using fallback symbol list")
+            # Fallback list of major S&P 500 stocks
+            return [
+                'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK-B', 'TSM', 'UNH',
+                'XOM', 'JNJ', 'JPM', 'V', 'PG', 'HD', 'CVX', 'MA', 'BAC', 'ABBV',
+                'PFE', 'AVGO', 'COST', 'DIS', 'KO', 'MRK', 'PEP', 'TMO', 'WMT', 'ABT'
+            ]
+
 
 class ResultsManager:
     """Manages saving and loading of analysis results - NO TRY-EXCEPT"""
@@ -452,7 +478,7 @@ class ResultsManager:
         print(f"Summary saved to {filename}")
     
     @staticmethod
-    def load_from_csv(filename: str = "sp500_fixed_grading_results.csv") -> List[Dict]:
+    def load_from_csv(filename: str = "sp500_enhanced_yfinance_results.csv") -> List[Dict]:
         """Load analysis results from CSV file - NO TRY-EXCEPT"""
         
         results = []
