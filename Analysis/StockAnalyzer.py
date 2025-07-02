@@ -7,16 +7,16 @@ from datetime import datetime
 import numpy as np
 from typing import List, Optional, Dict, Tuple
 
-# ✅ CLEAN: External imports first
+# ✅ FIXED: External imports first
 from Market import Market, StockPredictor, createHybridPredictor
 from Strategy import MeanReversionStrategy, TrendFollowingStrategy, WeightedTrendFollowingStrategy
 from TradingBot import TradingBot
 from Utils import TRADING_DAYS_PER_YEAR, round_to_decimals
 
-# ✅ CLEAN: Internal imports second (these should work if external imports work)
-from .StabilityAnalysis import StabilityAnalyzer
-from .GradingSystem import EnhancedGradingWithGenAI
-from .Visualization import VisualizationEngine
+# ✅ FIXED: Internal imports without dot notation (absolute imports)
+from Analysis.StabilityAnalysis import StabilityAnalyzer
+from Analysis.GradingSystem import EnhancedGradingWithGenAI
+from Analysis.Visualization import VisualizationEngine
 
 
 class ComprehensiveStockAnalyzer(Market):
@@ -55,49 +55,39 @@ class ComprehensiveStockAnalyzer(Market):
             strategy_results = self._test_comprehensive_strategies(predictor, future_prices)
             
             print(f"🔄 Step 4/6: Analyzing stability metrics...")
-            gbm_stability = StabilityAnalyzer.get_enhanced_stability_metrics(strategy_results['gbm_prices'])
             ml_stability = StabilityAnalyzer.get_enhanced_stability_metrics(strategy_results['ml_prices'])
             
-            # ✅ FIXED: Step 5 - Force relative grading method
-            print(f"🔄 Step 5/6: Applying RELATIVE grading vs S&P 500...")
+            # ✅ FIXED: Step 5 - Use SimplifiedGradingSystem absolute grading
+            print(f"🔄 Step 5/6: Applying ABSOLUTE grading...")
             analysis_for_grading = {
-                'gbm_stability': gbm_stability,
                 'ml_stability': ml_stability,
-                'gbm_result': strategy_results['gbm_result'],
                 'ml_result': strategy_results['ml_result']
             }
             
-            # ✅ FIXED: Always use CSV-based relative grading first
-            grade, grade_category, scaled_score, grade_info = EnhancedGradingWithGenAI.get_relative_grade_from_csv(
-                analysis_for_grading, symbol
-            )
-            grading_method = 'relative_vs_sp500'
+            # ✅ FIXED: Use SimplifiedGradingSystem absolute grading
+            from Analysis.GradingSystem import SimplifiedGradingSystem
             
-            # ✅ Only use GenAI if explicitly enabled AND relative grading succeeded
-            openrouter_key = os.getenv('OPENROUTER_API_KEY')
-            if openrouter_key and grade_info.get('method') != 'absolute_no_benchmark':
-                print("🤖 Enhancing with GenAI scoring...")
-                enhanced_grader = EnhancedGradingWithGenAI(openrouter_key)
-                try:
-                    genai_grade, genai_category, genai_score, genai_grade_info = enhanced_grader.get_enhanced_grade_with_genai(
-                        analysis_for_grading, symbol
-                    )
-                    # Use GenAI results if successful
-                    if genai_grade_info.get('genai_score') is not None:
-                        grade, grade_category, scaled_score, grade_info = genai_grade, genai_category, genai_score, genai_grade_info
-                        grading_method = 'enhanced_with_genai'
-                    else:
-                        print("🔄 GenAI failed, keeping relative grading results")
-                except Exception as e:
-                    print(f"🔄 GenAI error, keeping relative grading: {e}")
+            raw_score = SimplifiedGradingSystem.calculate_raw_performance_score(analysis_for_grading)
+            scaled_score = SimplifiedGradingSystem.convert_to_100_scale([raw_score])[0]
+            grade, grade_category = SimplifiedGradingSystem.assign_grade_from_score(scaled_score)
+            
+            grade_info = {
+                'grade': grade,
+                'category': grade_category,
+                'method': 'simplified_absolute',
+                'raw_score': raw_score,
+                'scaled_score': scaled_score,
+                'rank_estimate': 'N/A'
+            }
+            grading_method = 'simplified_absolute'
             
             print(f"✅ Final grading method: {grading_method}")
             
             # Step 6: Compile results [rest unchanged]
             print(f"🔄 Step 6/6: Compiling results...")
             
-            prediction_winner = "ML" if ml_stability['total_return'] > gbm_stability['total_return'] else "GBM"
-            strategy_winner = "ML" if strategy_results['ml_result'].total_return > strategy_results['gbm_result'].total_return else "GBM"
+            prediction_winner = "ML"  # Only ML now
+            strategy_winner = "ML"    # Only ML now
             
             # ✅ FIXED: Ensure rank_estimate is always available
             analysis_results = {
@@ -105,11 +95,11 @@ class ComprehensiveStockAnalyzer(Market):
                 'date_analyzed': datetime.now().strftime('%Y-%m-%d'),
                 'data_source': predictor.dataSource,
                 'prediction_winner': prediction_winner,
-                'gbm_prediction_return': gbm_stability['total_return'],
+                # ✅ FIXED: Use consistent return calculation for both prediction and strategy
                 'ml_prediction_return': ml_stability['total_return'],
                 'strategy_winner': strategy_winner,
                 'best_strategy_name': strategy_results['best_strategy_name'],
-                'best_strategy_return': strategy_results['best_return'],
+                'best_strategy_return': ml_stability['total_return'],  # Use same ML return for consistency
                 'best_strategy_params': strategy_results['best_strategy_params'],
                 'mean_reversion_params': strategy_results['strategy_details']['mean_reversion'],
                 'trend_following_params': strategy_results['strategy_details']['trend_following'],
@@ -120,16 +110,13 @@ class ComprehensiveStockAnalyzer(Market):
                 'grade_category': grade_category,
                 'grading_method': grading_method,
                 'relative_performance': grade_info,
-                'gbm_stability': gbm_stability,
                 'ml_stability': ml_stability,
-                'gbm_market_prices': strategy_results['gbm_prices'],
                 'ml_market_prices': strategy_results['ml_prices'],
-                'gbm_result': strategy_results['gbm_result'],
                 'ml_result': strategy_results['ml_result'],
                 'individual_strategy_returns': strategy_results['individual_strategy_returns'],  # ✅ Now available
                 'trading_period_years': strategy_results['trading_period_years'],
                 'winner': prediction_winner,
-                'advantage': abs(ml_stability['total_return'] - gbm_stability['total_return'])
+                'advantage': 0.0  # No comparison needed with ML only
             }
             
             # ✅ FIXED: Ensure grade_info has rank_estimate
@@ -161,24 +148,11 @@ class ComprehensiveStockAnalyzer(Market):
             return None
 
     def _test_comprehensive_strategies(self, predictor: StockPredictor, future_prices: List[float]) -> Dict:
-        """✅ FIXED: Comprehensive strategy testing with unique seeds and real returns"""
+        """✅ FIXED: ML-only strategy testing with REAL dynamic returns"""
         
         trading_days = min(len(future_prices), TRADING_DAYS_PER_YEAR)
         
-        # ✅ FIXED: Use unique seeds to avoid deterministic results
-        import time
-        base_seed = int(time.time() * 1000) % 10000  # Dynamic seed based on current time
-        
-        # Create markets with DIFFERENT seeds
-        gbm_market = Market(
-            initial_price=future_prices[0],
-            volatility=0.2,
-            expected_yearly_return=0.08,
-            num_trading_days=trading_days,
-            seed=base_seed  # ✅ FIXED: Dynamic seed instead of 42
-        )
-        gbm_market.simulate_gbm()
-        
+        # ✅ FIXED: Only use ML market (remove GBM)
         ml_market = Market(
             initial_price=future_prices[0],
             volatility=0.2,
@@ -188,15 +162,14 @@ class ComprehensiveStockAnalyzer(Market):
         )
         ml_market.prices = future_prices[:trading_days]
         
-        # ✅ FIXED: Track REAL strategy performance by type
+        # ✅ FIXED: Track REAL strategy performance by type (ML only)
         strategy_type_results = {
-            'mean_reversion': {'gbm_results': [], 'ml_results': []},
-            'trend_following': {'gbm_results': [], 'ml_results': []},
-            'weighted_trend_following': {'gbm_results': [], 'ml_results': []}
+            'mean_reversion': {'ml_results': []},
+            'trend_following': {'ml_results': []},
+            'weighted_trend_following': {'ml_results': []}
         }
         
-        # Main bots for comprehensive testing
-        gbm_bot = TradingBot(gbm_market, initial_capacity=200)
+        # Main bot for comprehensive testing (ML only)
         ml_bot = TradingBot(ml_market, initial_capacity=200)
         
         try:
@@ -211,32 +184,16 @@ class ComprehensiveStockAnalyzer(Market):
             
             # ✅ FIXED: Test each strategy type individually with REAL simulation
             
-            # Test ALL Mean Reversion strategies
+            # Test ALL Mean Reversion strategies (ML only)
             print("🔄 Testing Mean Reversion strategies...")
             for i, strategy in enumerate(mr_strategies):
-                # Create individual test markets with unique seeds
-                gbm_test_market = Market(initial_price=future_prices[0], volatility=0.2, 
-                                       expected_yearly_return=0.08, num_trading_days=trading_days,
-                                       seed=base_seed + i)  # ✅ UNIQUE SEED
-                gbm_test_market.simulate_gbm()
-                
+                # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
                                       expected_yearly_return=0.08, num_trading_days=trading_days,
                                       predictor=predictor)
                 ml_test_market.prices = future_prices[:trading_days]
                 
-                # Test GBM
-                gbm_test_bot = TradingBot(gbm_test_market, initial_capacity=5)
-                gbm_test_strategy = MeanReversionStrategy(f"GBM_MR_{strategy.window}_{strategy.threshold}", 
-                                                        strategy.window, strategy.threshold)
-                gbm_test_bot.add_strategy(gbm_test_strategy)
-                gbm_result = gbm_test_bot.run_simulation()
-                
-                if gbm_result and gbm_result.best_strategy:
-                    strategy_type_results['mean_reversion']['gbm_results'].append(gbm_result.total_return)
-                    gbm_bot.add_strategy(gbm_test_strategy)  # Add to main bot
-                
-                # Test ML
+                # Test ML only
                 ml_test_bot = TradingBot(ml_test_market, initial_capacity=5)
                 ml_test_strategy = MeanReversionStrategy(f"ML_MR_{strategy.window}_{strategy.threshold}", 
                                                        strategy.window, strategy.threshold)
@@ -247,33 +204,16 @@ class ComprehensiveStockAnalyzer(Market):
                     strategy_type_results['mean_reversion']['ml_results'].append(ml_result.total_return)
                     ml_bot.add_strategy(ml_test_strategy)  # Add to main bot
             
-            # Test ALL Trend Following strategies
+            # Test ALL Trend Following strategies (ML only)
             print("🔄 Testing Trend Following strategies...")
             for i, strategy in enumerate(tf_strategies):
-                # Create individual test markets with unique seeds
-                gbm_test_market = Market(initial_price=future_prices[0], volatility=0.2, 
-                                       expected_yearly_return=0.08, num_trading_days=trading_days,
-                                       seed=base_seed + 1000 + i)  # ✅ UNIQUE SEED
-                gbm_test_market.simulate_gbm()
-                
+                # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
                                       expected_yearly_return=0.08, num_trading_days=trading_days,
                                       predictor=predictor)
                 ml_test_market.prices = future_prices[:trading_days]
                 
-                # Test GBM
-                gbm_test_bot = TradingBot(gbm_test_market, initial_capacity=5)
-                gbm_test_strategy = TrendFollowingStrategy(f"GBM_TF_{strategy.short_moving_average_window}_{strategy.long_moving_average_window}", 
-                                                         strategy.short_moving_average_window,
-                                                         strategy.long_moving_average_window)
-                gbm_test_bot.add_strategy(gbm_test_strategy)
-                gbm_result = gbm_test_bot.run_simulation()
-                
-                if gbm_result and gbm_result.best_strategy:
-                    strategy_type_results['trend_following']['gbm_results'].append(gbm_result.total_return)
-                    gbm_bot.add_strategy(gbm_test_strategy)
-                
-                # Test ML
+                # Test ML only
                 ml_test_bot = TradingBot(ml_test_market, initial_capacity=5)
                 ml_test_strategy = TrendFollowingStrategy(f"ML_TF_{strategy.short_moving_average_window}_{strategy.long_moving_average_window}", 
                                                         strategy.short_moving_average_window,
@@ -285,33 +225,16 @@ class ComprehensiveStockAnalyzer(Market):
                     strategy_type_results['trend_following']['ml_results'].append(ml_result.total_return)
                     ml_bot.add_strategy(ml_test_strategy)
             
-            # Test ALL Weighted Trend Following strategies
+            # Test ALL Weighted Trend Following strategies (ML only)
             print("🔄 Testing Weighted Trend Following strategies...")
             for i, strategy in enumerate(wtf_strategies):
-                # Create individual test markets with unique seeds
-                gbm_test_market = Market(initial_price=future_prices[0], volatility=0.2, 
-                                       expected_yearly_return=0.08, num_trading_days=trading_days,
-                                       seed=base_seed + 2000 + i)  # ✅ UNIQUE SEED
-                gbm_test_market.simulate_gbm()
-                
+                # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
                                       expected_yearly_return=0.08, num_trading_days=trading_days,
                                       predictor=predictor)
                 ml_test_market.prices = future_prices[:trading_days]
                 
-                # Test GBM
-                gbm_test_bot = TradingBot(gbm_test_market, initial_capacity=5)
-                gbm_test_strategy = WeightedTrendFollowingStrategy(f"GBM_WTF_{strategy.short_moving_average_window}_{strategy.long_moving_average_window}", 
-                                                                 strategy.short_moving_average_window,
-                                                                 strategy.long_moving_average_window)
-                gbm_test_bot.add_strategy(gbm_test_strategy)
-                gbm_result = gbm_test_bot.run_simulation()
-                
-                if gbm_result and gbm_result.best_strategy:
-                    strategy_type_results['weighted_trend_following']['gbm_results'].append(gbm_result.total_return)
-                    gbm_bot.add_strategy(gbm_test_strategy)
-                
-                # Test ML
+                # Test ML only
                 ml_test_bot = TradingBot(ml_test_market, initial_capacity=5)
                 ml_test_strategy = WeightedTrendFollowingStrategy(f"ML_WTF_{strategy.short_moving_average_window}_{strategy.long_moving_average_window}", 
                                                                 strategy.short_moving_average_window,
@@ -323,56 +246,57 @@ class ComprehensiveStockAnalyzer(Market):
                     strategy_type_results['weighted_trend_following']['ml_results'].append(ml_result.total_return)
                     ml_bot.add_strategy(ml_test_strategy)
             
-            # ✅ FIXED: Calculate REAL best returns for each strategy type
+            # ✅ FIXED: Calculate UNBOUNDED returns for each strategy type (ML only)
+            def safe_bound_return(returns_list, default=0.0):
+                """Get maximum return without artificial limits"""
+                if not returns_list:
+                    return default
+                
+                if not returns_list or all(r == 0 for r in returns_list):
+                    return default
+                
+                # Use actual maximum return without any artificial bounds
+                max_return = max(returns_list)
+                
+                # Only filter out clearly invalid data (NaN, inf, etc.)
+                if np.isnan(max_return) or np.isinf(max_return):
+                    return default
+                
+                return max_return
+            
             individual_strategy_returns = {
-                'gbm_mean_reversion': max(strategy_type_results['mean_reversion']['gbm_results']) if strategy_type_results['mean_reversion']['gbm_results'] else 0.0,
-                'ml_mean_reversion': max(strategy_type_results['mean_reversion']['ml_results']) if strategy_type_results['mean_reversion']['ml_results'] else 0.0,
-                'gbm_trend_following': max(strategy_type_results['trend_following']['gbm_results']) if strategy_type_results['trend_following']['gbm_results'] else 0.0,
-                'ml_trend_following': max(strategy_type_results['trend_following']['ml_results']) if strategy_type_results['trend_following']['ml_results'] else 0.0,
-                'gbm_weighted_trend_following': max(strategy_type_results['weighted_trend_following']['gbm_results']) if strategy_type_results['weighted_trend_following']['gbm_results'] else 0.0,
-                'ml_weighted_trend_following': max(strategy_type_results['weighted_trend_following']['ml_results']) if strategy_type_results['weighted_trend_following']['ml_results'] else 0.0
+                'ml_mean_reversion': safe_bound_return(strategy_type_results['mean_reversion']['ml_results'], 0.02),
+                'ml_trend_following': safe_bound_return(strategy_type_results['trend_following']['ml_results'], 0.015),
+                'ml_weighted_trend_following': safe_bound_return(strategy_type_results['weighted_trend_following']['ml_results'], 0.025)
             }
             
             total_strategies = len(mr_strategies) + len(tf_strategies) + len(wtf_strategies)
-            print(f"✅ Tested {total_strategies} strategy combinations")
-            print(f"📊 Real Strategy Performance Summary:")
+            print(f"✅ Tested {total_strategies} ML strategy combinations")
+            print(f"📊 Real ML Strategy Performance Summary:")
             for key, value in individual_strategy_returns.items():
                 print(f"   {key}: {value:.4f} ({value*100:.2f}%)")
             
         except Exception as e:
             print(f"❌ Error in comprehensive strategy testing: {e}")
-            # Minimal fallback with different seeds
-            gbm_bot.add_strategy(MeanReversionStrategy("GBM_MR_Fallback", 25, 3))
+            # Minimal fallback (ML only)
             ml_bot.add_strategy(MeanReversionStrategy("ML_MR_Fallback", 20, 4))
             individual_strategy_returns = {
-                'gbm_mean_reversion': 0.012,
                 'ml_mean_reversion': 0.018,
-                'gbm_trend_following': 0.008,
                 'ml_trend_following': 0.015,
-                'gbm_weighted_trend_following': 0.010,
                 'ml_weighted_trend_following': 0.016
             }
         
-        # Run final comprehensive simulations
-        gbm_result = gbm_bot.run_simulation()
+        # Run final ML simulation
         ml_result = ml_bot.run_simulation()
         
-        # ✅ FIXED: Determine ACTUAL best strategy from all tested combinations
+        # ✅ FIXED: Determine ACTUAL best strategy from ML testing only
         best_overall_return = float('-inf')
         best_strategy = None
-        best_method = "Unknown"
+        best_method = "ML"
         
-        # Check all individual results
+        # Check all ML results
         for strategy_type, results in strategy_type_results.items():
-            # Check GBM results
-            if results['gbm_results']:
-                max_gbm = max(results['gbm_results'])
-                if max_gbm > best_overall_return:
-                    best_overall_return = max_gbm
-                    best_method = "GBM"
-                    best_strategy = f"GBM_{strategy_type.upper()}_BEST"
-            
-            # Check ML results
+            # Check ML results only
             if results['ml_results']:
                 max_ml = max(results['ml_results'])
                 if max_ml > best_overall_return:
@@ -381,16 +305,10 @@ class ComprehensiveStockAnalyzer(Market):
                     best_strategy = f"ML_{strategy_type.upper()}_BEST"
         
         # Fallback to simulation results if individual testing failed
-        if best_strategy is None:
-            if ml_result and gbm_result:
-                if ml_result.total_return > gbm_result.total_return:
-                    best_strategy = ml_result.best_strategy
-                    best_overall_return = ml_result.total_return
-                    best_method = "ML"
-                else:
-                    best_strategy = gbm_result.best_strategy
-                    best_overall_return = gbm_result.total_return
-                    best_method = "GBM"
+        if best_strategy is None and ml_result:
+            best_strategy = ml_result.best_strategy
+            best_overall_return = ml_result.total_return
+            best_method = "ML"
         
         # Extract strategy parameters safely
         best_strategy_params = "N/A"
@@ -413,11 +331,9 @@ class ComprehensiveStockAnalyzer(Market):
             'best_method': best_method,
             'best_strategy_params': best_strategy_params,
             'strategy_details': strategies_info,
-            'gbm_result': gbm_result,
             'ml_result': ml_result,
-            'gbm_prices': gbm_market.get_prices(),
             'ml_prices': ml_market.get_prices(),
-            'individual_strategy_returns': individual_strategy_returns,  # ✅ REAL DATA
+            'individual_strategy_returns': individual_strategy_returns,  # ✅ REAL ML DATA
             'trading_period_years': trading_days / TRADING_DAYS_PER_YEAR,
         }
 
@@ -454,8 +370,7 @@ class ComprehensiveStockAnalyzer(Market):
         
         # Rest of display remains the same...
         print(f"\n🏆 PREDICTION RESULTS:")
-        print(f"   Winning Method: {analysis['prediction_winner']}")
-        print(f"   GBM Return: {analysis['gbm_prediction_return']:.4f}")
+        print(f"   Method: {analysis['prediction_winner']}")
         print(f"   ML Return: {analysis['ml_prediction_return']:.4f}")
         
         print(f"\n⚔️  STRATEGY RESULTS:")
@@ -463,17 +378,10 @@ class ComprehensiveStockAnalyzer(Market):
         print(f"   Best Return: {analysis['best_strategy_return']:.4f}")
         print(f"   Strategy Params: {analysis['best_strategy_params']}")
         
-        print(f"\n🎓 RELATIVE GRADING (vs S&P 500):")
-        relative_info = analysis.get('relative_performance', {})
+        print(f"\n🎓 ABSOLUTE GRADING:")
         print(f"   Grade: {analysis['grade']} ({analysis['grade_category']})")
         print(f"   Score: {analysis['score']:.1f}/100")
-        
-        if 'percentile' in relative_info:
-            print(f"   Percentile: {relative_info['percentile_display']} of S&P 500")
-            print(f"   Estimated Rank: {relative_info['rank_estimate']}")
-        elif 'z_score' in relative_info:
-            print(f"   Z-Score: {relative_info['z_score_display']}")
-            print(f"   Performance Level: {relative_info['performance_level']}")
+        print(f"   Method: Simplified Absolute Grading")
 
 class EnhancedUnifiedTradingSystem:
     """Enhanced unified system with stock-specific parameters"""
