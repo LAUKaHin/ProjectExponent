@@ -176,7 +176,7 @@ class TradingBot:
     def place_buy_order(self, symbol: str, quantity: int = 1) -> bool:
         """Place a market buy order for the specified stock - NO TRY-EXCEPT"""
         if not self.trading_client:
-            print(f"❌ No trading client configured for {symbol}")
+            print(f"[ERROR] No trading client configured for {symbol}")
             return False
         
         market_order_data = MarketOrderRequest(
@@ -187,13 +187,13 @@ class TradingBot:
         )
         
         order = self.trading_client.submit_order(order_data=market_order_data)
-        print(f"✅ Buy order placed for {quantity} share(s) of {symbol}, Order ID: {order.id}")
+        print(f"[SUCCESS] Buy order placed for {quantity} share(s) of {symbol}, Order ID: {order.id}")
         return True
     
     def place_sell_order(self, symbol: str, quantity: int) -> bool:
         """Place a market sell order for the specified stock - NO TRY-EXCEPT"""
         if not self.trading_client:
-            print(f"❌ No trading client configured for {symbol}")
+            print(f"[ERROR] No trading client configured for {symbol}")
             return False
         
         market_order_data = MarketOrderRequest(
@@ -204,33 +204,33 @@ class TradingBot:
         )
         
         order = self.trading_client.submit_order(order_data=market_order_data)
-        print(f"✅ Sell order placed for {quantity} share(s) of {symbol}, Order ID: {order.id}")
+        print(f"[SUCCESS] Sell order placed for {quantity} share(s) of {symbol}, Order ID: {order.id}")
         return True
     
     def display_all_holdings(self):
         """Display comprehensive holdings information - NO TRY-EXCEPT"""
         if not self.trading_client:
-            print("❌ No trading client available")
+            print("[ERROR] No trading client available")
             return
         
         holdings = self.get_current_holdings()
         
         if not holdings:
-            print("📊 No current holdings in account")
+            print("[INFO] No current holdings in account")
             return
         
         print("\n" + "="*80)
-        print("🏢 COMPLETE ACCOUNT HOLDINGS")
+        print("[ACCOUNT] COMPLETE ACCOUNT HOLDINGS")
         print("="*80)
         
         # Get account info
         account = self.trading_client.get_account()
-        print(f"💰 Total Portfolio Value: ${float(account.portfolio_value):,.2f}")
-        print(f"💵 Buying Power: ${float(account.buying_power):,.2f}")
-        print(f"📈 Total Equity: ${float(account.equity):,.2f}")
-        print(f"📊 Day Trade Buying Power: ${float(account.daytrading_buying_power):,.2f}")
+        print(f"[PORTFOLIO] Total Portfolio Value: ${float(account.portfolio_value):,.2f}")
+        print(f"[CASH] Buying Power: ${float(account.buying_power):,.2f}")
+        print(f"[EQUITY] Total Equity: ${float(account.equity):,.2f}")
+        print(f"[DAYTRADING] Day Trade Buying Power: ${float(account.daytrading_buying_power):,.2f}")
         
-        print(f"\n📋 ALL HOLDINGS ({len(holdings)} positions):")
+        print(f"\n[HOLDINGS] ALL HOLDINGS ({len(holdings)} positions):")
         print(f"{'Symbol':<8} {'Qty':<6} {'Entry $':<10} {'Current $':<10} {'Market Val':<12} {'P&L':<10} {'P&L %':<8}")
         print("-" * 70)
         
@@ -293,7 +293,7 @@ class AutomatedTradingSystemLoop:
         
         # Load pre-analyzed stock data from CSV
         self.stock_database = self._load_stock_database()
-        self.sp500_symbols = self.get_sp500_symbols()  # ✅ Now this method exists
+        self.sp500_symbols = self.get_sp500_symbols()  # Now this method exists
         
         # Trading state
         self.active_positions = {}
@@ -305,10 +305,10 @@ class AutomatedTradingSystemLoop:
         self.market_close = dt_time(16, 0)
         self.eastern_tz = pytz.timezone('US/Eastern')
         
-        print(f"🚀 Automated Trading System Initialized")
-        print(f"📊 Loaded {len(self.stock_database)} stocks from database")
-        print(f"📈 Tracking {len(self.sp500_symbols)} S&P 500 symbols")
-        print(f"💰 Paper Trading: {paper_trading}")
+        print(f"[INIT] Automated Trading System Initialized")
+        print(f"[DATABASE] Loaded {len(self.stock_database)} stocks from database")
+        print(f"[TRACKING] Tracking {len(self.sp500_symbols)} S&P 500 symbols")
+        print(f"[MODE] Paper Trading: {paper_trading}")
         
     
     def _load_stock_database(self) -> Dict[str, Dict]:
@@ -338,8 +338,8 @@ class AutomatedTradingSystemLoop:
             return stock_db
             
         except Exception as e:
-            print(f"⚠️  Error loading stock database: {e}")
-            print("📊 Using empty database")
+            print(f"[WARNING] Error loading stock database: {e}")
+            print("[INFO] Using empty database")
             return {}
     
     def _is_market_open(self) -> bool:
@@ -356,22 +356,22 @@ class AutomatedTradingSystemLoop:
     
     def start_automated_trading(self):
         """Start the automated trading system - NO TRY-EXCEPT"""
-        print("\n🚀 STARTING AUTOMATED TRADING SYSTEM")
+        print("\n[START] STARTING AUTOMATED TRADING SYSTEM")
         print("="*60)
         
         # Display initial holdings
-        print("\n📋 INITIAL ACCOUNT STATUS:")
+        print("\n[STATUS] INITIAL ACCOUNT STATUS:")
         self.trading_bot.display_all_holdings()
         
         if not self._is_market_open():
-            print("⏰ Market is currently closed. System will wait for market open.")
+            print("[SCHEDULE] Market is currently closed. System will wait for market open.")
         
         # Schedule monitoring
         schedule.every(1).minutes.do(self._minute_task)
         self.is_running = True
         
-        print("✅ Automated trading system is now running...")
-        print("🛑 Press Ctrl+C to stop")
+        print("[RUNNING] Automated trading system is now running...")
+        print("[CONTROL] Press Ctrl+C to stop")
         
         while self.is_running:
             if self._is_market_open():
@@ -379,25 +379,25 @@ class AutomatedTradingSystemLoop:
             else:
                 now = datetime.now(self.eastern_tz)
                 if now.time() > self.market_close:
-                    print(f"🌙 Market closed for today.")
+                    print(f"[CLOSED] Market closed for today.")
                     time.sleep(3600)
                 else:
-                    print(f"⏰ Waiting for market open...")
+                    print(f"[WAITING] Waiting for market open...")
                     time.sleep(300)
             time.sleep(1)
     
     def _minute_task(self):
         """Task that runs every minute during market hours"""
         if self._is_market_open():
-            print(f"🔍 Market monitoring cycle at {datetime.now().strftime('%H:%M:%S')}")
+            print(f"[MONITOR] Market monitoring cycle at {datetime.now().strftime('%H:%M:%S')}")
     
     def stop_trading(self):
         """Stop the automated trading system"""
         self.is_running = False
-        print("🛑 Automated trading system stopped")
+        print("[STOPPED] Automated trading system stopped")
         
         # Display final holdings
-        print("\n📋 FINAL ACCOUNT STATUS:")
+        print("\n[FINAL] FINAL ACCOUNT STATUS:")
         self.trading_bot.display_all_holdings()
         
         
@@ -416,12 +416,12 @@ class AutomatedTradingSystemLoop:
                 cleaned_symbol = str(symbol).replace('.', '-')
                 cleaned_symbols.append(cleaned_symbol)
             
-            print(f"📊 Loaded {len(cleaned_symbols)} S&P 500 symbols")
+            print(f"[SYMBOLS] Loaded {len(cleaned_symbols)} S&P 500 symbols")
             return cleaned_symbols
             
         except Exception as e:
-            print(f"❌ Error fetching S&P 500 symbols: {e}")
-            print("📊 Using fallback symbol list")
+            print(f"[ERROR] Error fetching S&P 500 symbols: {e}")
+            print("[FALLBACK] Using fallback symbol list")
             # Fallback list of major S&P 500 stocks
             return [
                 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK-B', 'TSM', 'UNH',

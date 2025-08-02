@@ -310,7 +310,7 @@ class VisualizationEngine(Market):
         try:
             analysis_data = VisualizationEngine._validate_analysis_data(analysis_data)
         except ValueError as e:
-            print(f"❌ Data validation error: {e}")
+            print(f"[ERROR] Data validation error: {e}")
             return None
         
         # Create figure with proper layout
@@ -340,13 +340,13 @@ class VisualizationEngine(Market):
             # Save if requested
             if save_path:
                 plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-                print(f"📊 Comprehensive analysis saved to: {save_path}")
+                print(f"[INFO] Comprehensive analysis saved to: {save_path}")
             
             plt.show()
             return fig
             
         except Exception as e:
-            print(f"❌ Error creating visualization: {e}")
+            print(f"[ERROR] Error creating visualization: {e}")
             plt.close(fig)
             return None
     
@@ -379,7 +379,7 @@ class UserPreferenceManager(Market):
                 'trading_allowed', 'notes'
             ])
             df.to_csv(filename, index=False)
-            print(f"📝 Created new user preference file: {filename}")
+            print(f"[INFO] Created new user preference file: {filename}")
             return df
         except Exception as e:
             print(f"Error loading user preferences: {e}")
@@ -443,8 +443,8 @@ class UserPreferenceManager(Market):
             return True
             
         except Exception as e:
-            print(f"❌ Error saving user preference: {e}")
-            print(f"🔍 Available keys: {list(stock_analysis.keys()) if stock_analysis else 'None'}")
+            print(f"[ERROR] Error saving user preference: {e}")
+            print(f"[DEBUG] Available keys: {list(stock_analysis.keys()) if stock_analysis else 'None'}")
             return False
     
     @staticmethod
@@ -455,8 +455,8 @@ class UserPreferenceManager(Market):
             if symbol in df['symbol'].values:
                 df.loc[df['symbol'] == symbol, 'trading_allowed'] = allowed
                 df.to_csv(filename, index=False)
-                print(f"📝 Updated trading permission for {symbol}: {'Allowed' if allowed else 'Blocked'}")
+                print(f"[INFO] Updated trading permission for {symbol}: {'Allowed' if allowed else 'Blocked'}")
             else:
-                print(f"⚠️ {symbol} not found in user preferences")
+                print(f"[WARNING] {symbol} not found in user preferences")
         except Exception as e:
             print(f"Error updating trading permission: {e}")

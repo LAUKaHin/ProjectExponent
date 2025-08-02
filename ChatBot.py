@@ -32,8 +32,8 @@ class TradingStatusBot(commands.Bot):
     
     async def on_ready(self):
         """Called when bot is ready"""
-        print(f'🤖 {self.user} has connected to Discord!')
-        print(f'📊 Trading Bot Status: {"Connected" if self.trading_bot else "Disconnected"}')
+        print(f'[AI] {self.user} has connected to Discord!')
+        print(f'[INFO] Trading Bot Status: {"Connected" if self.trading_bot else "Disconnected"}')
         
         # Start daily reporting task
         if not self.daily_report.is_running():
@@ -45,13 +45,13 @@ class TradingStatusBot(commands.Bot):
         """Send daily account status report"""
         
         if not self.trading_bot or self.channel_id == 0:
-            print("⚠️  Cannot send daily report: Trading bot or channel not configured")
+            print("[WARNING] Cannot send daily report: Trading bot or channel not configured")
             return
         
         try:
             channel = self.get_channel(self.channel_id)
             if not channel:
-                print(f"❌ Could not find channel with ID: {self.channel_id}")
+                print(f"[ERROR] Could not find channel with ID: {self.channel_id}")
                 return
             
             # Generate comprehensive report
@@ -59,7 +59,7 @@ class TradingStatusBot(commands.Bot):
             
             # Send report as embed
             embed = discord.Embed(
-                title="📊 Daily Trading Account Status",
+                title="[INFO] Daily Trading Account Status",
                 description=f"Report generated on {datetime.now().strftime('%Y-%m-%d at %H:%M:%S EST')}",
                 color=0x00ff00  # Green
             )
@@ -71,10 +71,10 @@ class TradingStatusBot(commands.Bot):
             embed.set_footer(text="Automated Trading Bot • Daily Report")
             
             await channel.send(embed=embed)
-            print(f"✅ Daily report sent to channel {channel.name}")
+            print(f"[SUCCESS] Daily report sent to channel {channel.name}")
             
         except Exception as e:
-            print(f"❌ Error sending daily report: {e}")
+            print(f"[ERROR] Error sending daily report: {e}")
     
     async def generate_daily_report(self) -> dict:
         """Generate comprehensive daily trading report"""
@@ -85,30 +85,30 @@ class TradingStatusBot(commands.Bot):
             positions = self.trading_bot.get_positions()
             
             report = {
-                "💰 Account Summary": f"""
+                "[INFO] Account Summary": f"""
                 **Portfolio Value:** ${float(account_info.get('portfolio_value', 0)):,.2f}
                 **Cash Available:** ${float(account_info.get('cash', 0)):,.2f}
                 **Day P&L:** ${float(account_info.get('unrealized_pl', 0)):,.2f}
                 **Total P&L:** ${float(account_info.get('unrealized_pl', 0)):,.2f}
                 """,
                 
-                "📈 Current Positions": self._format_positions(positions),
+                "[INFO] Current Positions": self._format_positions(positions),
                 
-                "📊 Market Status": f"""
+                "[INFO] Market Status": f"""
                 **Market Hours:** {"Open" if self._is_market_open() else "Closed"}
                 **Account Status:** {account_info.get('status', 'Unknown')}
                 **Buying Power:** ${float(account_info.get('buying_power', 0)):,.2f}
                 """,
                 
-                "🎯 Trading Activity": "No recent activity",  # Implement if needed
+                "[INFO] Trading Activity": "No recent activity",  # Implement if needed
                 
-                "⚠️ Alerts": self._check_alerts(account_info, positions)
+                "[WARNING] Alerts": self._check_alerts(account_info, positions)
             }
             
             return report
             
         except Exception as e:
-            return {"❌ Error": f"Failed to generate report: {str(e)}"}
+            return {"[ERROR] Error": f"Failed to generate report: {str(e)}"}
     
     def _format_positions(self, positions) -> str:
         """Format positions for display"""
@@ -122,8 +122,8 @@ class TradingStatusBot(commands.Bot):
             market_value = float(position.get('market_value', 0))
             unrealized_pl = float(position.get('unrealized_pl', 0))
             
-            pl_emoji = "📈" if unrealized_pl >= 0 else "📉"
-            formatted.append(f"{pl_emoji} **{symbol}**: {qty:,.0f} shares (${market_value:,.2f})")
+            pl_status = "[UP]" if unrealized_pl >= 0 else "[DOWN]"
+            formatted.append(f"{pl_status} **{symbol}**: {qty:,.0f} shares (${market_value:,.2f})")
         
         return "\n".join(formatted) if formatted else "No positions"
     
@@ -163,9 +163,9 @@ class TradingStatusBot(commands.Bot):
                 alerts.append("🔴 Account status issue")
             
         except Exception as e:
-            alerts.append(f"⚠️ Error checking alerts: {str(e)}")
+            alerts.append(f"[WARNING] Error checking alerts: {str(e)}")
         
-        return "\n".join(alerts) if alerts else "✅ No alerts"
+        return "\n".join(alerts) if alerts else "[SUCCESS] No alerts"
     
     # Bot commands
     @commands.command(name='status')
@@ -173,14 +173,14 @@ class TradingStatusBot(commands.Bot):
         """Manual status check command"""
         
         if not self.trading_bot:
-            await ctx.send("❌ Trading bot not connected")
+            await ctx.send("[ERROR] Trading bot not connected")
             return
         
         try:
             report = await self.generate_daily_report()
             
             embed = discord.Embed(
-                title="📊 Current Account Status",
+                title="[INFO] Current Account Status",
                 color=0x0099ff  # Blue
             )
             
@@ -190,14 +190,14 @@ class TradingStatusBot(commands.Bot):
             await ctx.send(embed=embed)
             
         except Exception as e:
-            await ctx.send(f"❌ Error generating status: {str(e)}")
+            await ctx.send(f"[ERROR] Error generating status: {str(e)}")
     
     @commands.command(name='positions')
     async def positions_command(self, ctx):
         """Get current positions"""
         
         if not self.trading_bot:
-            await ctx.send("❌ Trading bot not connected")
+            await ctx.send("[ERROR] Trading bot not connected")
             return
         
         try:
@@ -205,7 +205,7 @@ class TradingStatusBot(commands.Bot):
             formatted_positions = self._format_positions(positions)
             
             embed = discord.Embed(
-                title="📈 Current Positions",
+                title="[INFO] Current Positions",
                 description=formatted_positions,
                 color=0x00ff00
             )
@@ -213,7 +213,7 @@ class TradingStatusBot(commands.Bot):
             await ctx.send(embed=embed)
             
         except Exception as e:
-            await ctx.send(f"❌ Error getting positions: {str(e)}")
+            await ctx.send(f"[ERROR] Error getting positions: {str(e)}")
 
 def run_discord_bot():
     """Run the Discord bot"""
@@ -222,8 +222,8 @@ def run_discord_bot():
     token = os.getenv('DISCORD_BOT_TOKEN')
     
     if not token:
-        print("❌ DISCORD_BOT_TOKEN not found in environment variables")
-        print("💡 Set the following environment variables:")
+        print("[ERROR] DISCORD_BOT_TOKEN not found in environment variables")
+        print("[TIP] Set the following environment variables:")
         print("   - DISCORD_BOT_TOKEN")
         print("   - DISCORD_CHANNEL_ID")
         print("   - ALPACA_API_KEY")
@@ -235,7 +235,7 @@ def run_discord_bot():
     try:
         bot.run(token)
     except Exception as e:
-        print(f"❌ Error running Discord bot: {e}")
+        print(f"[ERROR] Error running Discord bot: {e}")
 
 if __name__ == "__main__":
     run_discord_bot()

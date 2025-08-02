@@ -7,13 +7,13 @@ from datetime import datetime
 import numpy as np
 from typing import List, Optional, Dict, Tuple
 
-# ✅ FIXED: External imports first
+# [SUCCESS] FIXED: External imports first
 from Market import Market, StockPredictor, createHybridPredictor
 from Strategy import MeanReversionStrategy, TrendFollowingStrategy, WeightedTrendFollowingStrategy
 from TradingBot import TradingBot
 from Utils import TRADING_DAYS_PER_YEAR, round_to_decimals
 
-# ✅ FIXED: Internal imports without dot notation (absolute imports)
+# [SUCCESS] FIXED: Internal imports without dot notation (absolute imports)
 from Analysis.StabilityAnalysis import StabilityAnalyzer
 from Analysis.GradingSystem import EnhancedGradingWithGenAI
 from Analysis.Visualization import VisualizationEngine
@@ -28,7 +28,7 @@ class ComprehensiveStockAnalyzer(Market):
         self.secret_key = secret_key
     
     def analyze_stock_comprehensive(self, symbol: str, show_visualization: bool = True, use_genai: bool = True) -> Dict:
-        """✅ UPDATED: Use relative grading for operations 1&2"""
+        """[SUCCESS] UPDATED: Use relative grading for operations 1&2"""
         
         print(f"\n{'='*80}")
         print(f"COMPREHENSIVE STOCK ANALYSIS: {symbol}")
@@ -36,7 +36,7 @@ class ComprehensiveStockAnalyzer(Market):
         
         try:
             # Steps 1-4: Setup, strategies, stability analysis [unchanged]
-            print(f"\n🔄 Step 1/6: Running complete analysis for {symbol}...")
+            print(f"\n[STEP] Step 1/6: Running complete analysis for {symbol}...")
             predictor = createHybridPredictor(self.api_key, self.secret_key, symbol)
             
             try:
@@ -44,27 +44,27 @@ class ComprehensiveStockAnalyzer(Market):
             except Exception as e:
                 raise ValueError(f"Failed to complete analysis for {symbol}: {str(e)}")
             
-            print(f"🔄 Step 2/6: Predictions generated using {predictor.dataSource}...")
+            print(f"[STEP] Step 2/6: Predictions generated using {predictor.dataSource}...")
             future_dates = predictor.futureDates
             future_prices = predictor.futurePrices
             
             if len(future_dates) == 0 or len(future_prices) == 0:
                 raise ValueError(f"Failed to generate predictions for {symbol}")
             
-            print(f"🔄 Step 3/6: Testing trading strategies...")
+            print(f"[STEP] Step 3/6: Testing trading strategies...")
             strategy_results = self._test_comprehensive_strategies(predictor, future_prices)
             
-            print(f"🔄 Step 4/6: Analyzing stability metrics...")
+            print(f"[STEP] Step 4/6: Analyzing stability metrics...")
             ml_stability = StabilityAnalyzer.get_enhanced_stability_metrics(strategy_results['ml_prices'])
             
-            # ✅ FIXED: Step 5 - Use SimplifiedGradingSystem absolute grading
-            print(f"🔄 Step 5/6: Applying ABSOLUTE grading...")
+            # [SUCCESS] FIXED: Step 5 - Use SimplifiedGradingSystem absolute grading
+            print(f"[STEP] Step 5/6: Applying ABSOLUTE grading...")
             analysis_for_grading = {
                 'ml_stability': ml_stability,
                 'ml_result': strategy_results['ml_result']
             }
             
-            # ✅ FIXED: Use SimplifiedGradingSystem absolute grading
+            # [SUCCESS] FIXED: Use SimplifiedGradingSystem absolute grading
             from Analysis.GradingSystem import SimplifiedGradingSystem
             
             raw_score = SimplifiedGradingSystem.calculate_raw_performance_score(analysis_for_grading)
@@ -81,21 +81,21 @@ class ComprehensiveStockAnalyzer(Market):
             }
             grading_method = 'simplified_absolute'
             
-            print(f"✅ Final grading method: {grading_method}")
+            print(f"[SUCCESS] Final grading method: {grading_method}")
             
             # Step 6: Compile results [rest unchanged]
-            print(f"🔄 Step 6/6: Compiling results...")
+            print(f"[STEP] Step 6/6: Compiling results...")
             
             prediction_winner = "ML"  # Only ML now
             strategy_winner = "ML"    # Only ML now
             
-            # ✅ FIXED: Ensure rank_estimate is always available
+            # [SUCCESS] FIXED: Ensure rank_estimate is always available
             analysis_results = {
                 'symbol': symbol,
                 'date_analyzed': datetime.now().strftime('%Y-%m-%d'),
                 'data_source': predictor.dataSource,
                 'prediction_winner': prediction_winner,
-                # ✅ FIXED: Use consistent return calculation for both prediction and strategy
+                # [SUCCESS] FIXED: Use consistent return calculation for both prediction and strategy
                 'ml_prediction_return': ml_stability['total_return'],
                 'strategy_winner': strategy_winner,
                 'best_strategy_name': strategy_results['best_strategy_name'],
@@ -104,7 +104,7 @@ class ComprehensiveStockAnalyzer(Market):
                 'mean_reversion_params': strategy_results['strategy_details']['mean_reversion'],
                 'trend_following_params': strategy_results['strategy_details']['trend_following'],
                 'weighted_trend_following_params': strategy_results['strategy_details']['weighted_trend_following'],
-                'rank': grade_info.get('rank_estimate', 'N/A'),  # ✅ FIXED: Safe access
+                'rank': grade_info.get('rank_estimate', 'N/A'),  # [SUCCESS] FIXED: Safe access
                 'score': scaled_score,
                 'grade': grade,
                 'grade_category': grade_category,
@@ -113,19 +113,19 @@ class ComprehensiveStockAnalyzer(Market):
                 'ml_stability': ml_stability,
                 'ml_market_prices': strategy_results['ml_prices'],
                 'ml_result': strategy_results['ml_result'],
-                'individual_strategy_returns': strategy_results['individual_strategy_returns'],  # ✅ Now available
+                'individual_strategy_returns': strategy_results['individual_strategy_returns'],  # [SUCCESS] Now available
                 'trading_period_years': strategy_results['trading_period_years'],
                 'winner': prediction_winner,
                 'advantage': 0.0  # No comparison needed with ML only
             }
             
-            # ✅ FIXED: Ensure grade_info has rank_estimate
+            # [SUCCESS] FIXED: Ensure grade_info has rank_estimate
             analysis_results['grade_info'] = {
                 'grade': grade,
                 'score': scaled_score,
                 'category': grade_category,
                 'grading_method': grading_method,
-                'rank_estimate': grade_info.get('rank_estimate', 'N/A'),  # ✅ Always included
+                'rank_estimate': grade_info.get('rank_estimate', 'N/A'),  # [SUCCESS] Always included
                 **grade_info
             }
 
@@ -135,7 +135,7 @@ class ComprehensiveStockAnalyzer(Market):
             
             # Create visualization with enhanced design
             if show_visualization:
-                print(f"🔄 Creating enhanced comprehensive visualization...")
+                print(f"[STEP] Creating enhanced comprehensive visualization...")
                 visualization_path = f"{symbol}_comprehensive_analysis.png"
                 VisualizationEngine.plot_enhanced_comprehensive_analysis(
                     symbol, analysis_results, visualization_path
@@ -144,15 +144,15 @@ class ComprehensiveStockAnalyzer(Market):
             return analysis_results
             
         except Exception as e:
-            print(f"❌ Error analyzing {symbol}: {str(e)}")
+            print(f"[ERROR] Error analyzing {symbol}: {str(e)}")
             return None
 
     def _test_comprehensive_strategies(self, predictor: StockPredictor, future_prices: List[float]) -> Dict:
-        """✅ FIXED: ML-only strategy testing with REAL dynamic returns"""
+        """[SUCCESS] FIXED: ML-only strategy testing with REAL dynamic returns"""
         
         trading_days = min(len(future_prices), TRADING_DAYS_PER_YEAR)
         
-        # ✅ FIXED: Only use ML market (remove GBM)
+        # [SUCCESS] FIXED: Only use ML market (remove GBM)
         ml_market = Market(
             initial_price=future_prices[0],
             volatility=0.2,
@@ -162,7 +162,7 @@ class ComprehensiveStockAnalyzer(Market):
         )
         ml_market.prices = future_prices[:trading_days]
         
-        # ✅ FIXED: Track REAL strategy performance by type (ML only)
+        # [SUCCESS] FIXED: Track REAL strategy performance by type (ML only)
         strategy_type_results = {
             'mean_reversion': {'ml_results': []},
             'trend_following': {'ml_results': []},
@@ -173,19 +173,19 @@ class ComprehensiveStockAnalyzer(Market):
         ml_bot = TradingBot(ml_market, initial_capacity=200)
         
         try:
-            print("🔄 Testing ALL strategy combinations...")
+            print("[STEP] Testing ALL strategy combinations...")
             
-            # ✅ FIXED: Generate comprehensive strategy sets with different parameters
+            # [SUCCESS] FIXED: Generate comprehensive strategy sets with different parameters
             mr_strategies = MeanReversionStrategy.generate_strategy_set("MR", 10, 50, 10, 2, 8, 2)  # More varied
             tf_strategies = TrendFollowingStrategy.generate_strategy_set("TF", 5, 25, 5, 20, 60, 10)  # More varied
             wtf_strategies = WeightedTrendFollowingStrategy.generate_strategy_set("WTF", 5, 25, 5, 20, 60, 10)  # More varied
             
-            print(f"📊 Generated {len(mr_strategies)} MR + {len(tf_strategies)} TF + {len(wtf_strategies)} WTF strategies")
+            print(f"[INFO] Generated {len(mr_strategies)} MR + {len(tf_strategies)} TF + {len(wtf_strategies)} WTF strategies")
             
-            # ✅ FIXED: Test each strategy type individually with REAL simulation
+            # [SUCCESS] FIXED: Test each strategy type individually with REAL simulation
             
             # Test ALL Mean Reversion strategies (ML only)
-            print("🔄 Testing Mean Reversion strategies...")
+            print("[STEP] Testing Mean Reversion strategies...")
             for i, strategy in enumerate(mr_strategies):
                 # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
@@ -205,7 +205,7 @@ class ComprehensiveStockAnalyzer(Market):
                     ml_bot.add_strategy(ml_test_strategy)  # Add to main bot
             
             # Test ALL Trend Following strategies (ML only)
-            print("🔄 Testing Trend Following strategies...")
+            print("[STEP] Testing Trend Following strategies...")
             for i, strategy in enumerate(tf_strategies):
                 # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
@@ -226,7 +226,7 @@ class ComprehensiveStockAnalyzer(Market):
                     ml_bot.add_strategy(ml_test_strategy)
             
             # Test ALL Weighted Trend Following strategies (ML only)
-            print("🔄 Testing Weighted Trend Following strategies...")
+            print("[STEP] Testing Weighted Trend Following strategies...")
             for i, strategy in enumerate(wtf_strategies):
                 # Create individual ML test market
                 ml_test_market = Market(initial_price=future_prices[0], volatility=0.2,
@@ -246,7 +246,7 @@ class ComprehensiveStockAnalyzer(Market):
                     strategy_type_results['weighted_trend_following']['ml_results'].append(ml_result.total_return)
                     ml_bot.add_strategy(ml_test_strategy)
             
-            # ✅ FIXED: Calculate UNBOUNDED returns for each strategy type (ML only)
+            # [SUCCESS] FIXED: Calculate UNBOUNDED returns for each strategy type (ML only)
             def safe_bound_return(returns_list, default=0.0):
                 """Get maximum return without artificial limits"""
                 if not returns_list:
@@ -271,13 +271,13 @@ class ComprehensiveStockAnalyzer(Market):
             }
             
             total_strategies = len(mr_strategies) + len(tf_strategies) + len(wtf_strategies)
-            print(f"✅ Tested {total_strategies} ML strategy combinations")
-            print(f"📊 Real ML Strategy Performance Summary:")
+            print(f"[SUCCESS] Tested {total_strategies} ML strategy combinations")
+            print(f"[INFO] Real ML Strategy Performance Summary:")
             for key, value in individual_strategy_returns.items():
                 print(f"   {key}: {value:.4f} ({value*100:.2f}%)")
             
         except Exception as e:
-            print(f"❌ Error in comprehensive strategy testing: {e}")
+            print(f"[ERROR] Error in comprehensive strategy testing: {e}")
             # Minimal fallback (ML only)
             ml_bot.add_strategy(MeanReversionStrategy("ML_MR_Fallback", 20, 4))
             individual_strategy_returns = {
@@ -289,7 +289,7 @@ class ComprehensiveStockAnalyzer(Market):
         # Run final ML simulation
         ml_result = ml_bot.run_simulation()
         
-        # ✅ FIXED: Determine ACTUAL best strategy from ML testing only
+        # [SUCCESS] FIXED: Determine ACTUAL best strategy from ML testing only
         best_overall_return = float('-inf')
         best_strategy = None
         best_method = "ML"
@@ -333,7 +333,7 @@ class ComprehensiveStockAnalyzer(Market):
             'strategy_details': strategies_info,
             'ml_result': ml_result,
             'ml_prices': ml_market.get_prices(),
-            'individual_strategy_returns': individual_strategy_returns,  # ✅ REAL ML DATA
+            'individual_strategy_returns': individual_strategy_returns,  # [SUCCESS] REAL ML DATA
             'trading_period_years': trading_days / TRADING_DAYS_PER_YEAR,
         }
 
@@ -344,36 +344,36 @@ class ComprehensiveStockAnalyzer(Market):
         symbol = analysis['symbol']
         
         print(f"\n{'='*80}")
-        print(f"📊 COMPREHENSIVE ANALYSIS RESULTS FOR {symbol}")
+        print(f"[INFO] COMPREHENSIVE ANALYSIS RESULTS FOR {symbol}")
         print(f"{'='*80}")
         
-        print(f"\n📈 STOCK INFORMATION:")
+        print(f"\n[INFO] STOCK INFORMATION:")
         print(f"   Symbol: {symbol}")
         print(f"   Analysis Date: {analysis['date_analyzed']}")
         print(f"   Data Source: {analysis['data_source']}")
         
-        # ✅ UPDATED: Show enhanced grading context
-        print(f"\n🎓 GRADING SYSTEM: {analysis['grading_method'].upper()}")
+        # [SUCCESS] UPDATED: Show enhanced grading context
+        print(f"\n[GRADE] GRADING SYSTEM: {analysis['grading_method'].upper()}")
         grade_info = analysis.get('grade_info', {})
         print(f"   Grade: {analysis['grade']} ({analysis['grade_category']})")
         print(f"   Score: {analysis['score']:.1f}/100")
         
         # Show GenAI-specific information
         if 'genai_score' in grade_info and grade_info['genai_score'] is not None:
-            print(f"   🤖 GenAI Score: {grade_info['genai_score']:.3f}/1.0")
-            print(f"   🔬 Scoring Method: Enhanced (Traditional + GenAI)")
-            print(f"   📊 GenAI Weight: 60% | Traditional Weight: 40%")
+            print(f"   [AI] GenAI Score: {grade_info['genai_score']:.3f}/1.0")
+            print(f"   [METHOD] Scoring Method: Enhanced (Traditional + GenAI)")
+            print(f"   [INFO] GenAI Weight: 60% | Traditional Weight: 40%")
         else:
-            print(f"   🔬 Scoring Method: {analysis['grading_method']}")
+            print(f"   [METHOD] Scoring Method: {analysis['grading_method']}")
             if 'percentile' in grade_info:
-                print(f"   📊 Percentile: {grade_info['percentile_display']} of S&P 500")
+                print(f"   [INFO] Percentile: {grade_info['percentile_display']} of S&P 500")
         
         # Rest of display remains the same...
-        print(f"\n🏆 PREDICTION RESULTS:")
+        print(f"\n[RESULT] PREDICTION RESULTS:")
         print(f"   Method: {analysis['prediction_winner']}")
         print(f"   ML Return: {analysis['ml_prediction_return']:.4f}")
         
-        print(f"\n⚔️  STRATEGY RESULTS:")
+        print(f"\n[RESULT] STRATEGY RESULTS:")
         print(f"   Best Strategy: {analysis['best_strategy_name']}")
         print(f"   Best Return: {analysis['best_strategy_return']:.4f}")
         print(f"   Strategy Params: {analysis['best_strategy_params']}")
@@ -395,19 +395,19 @@ class EnhancedUnifiedTradingSystem:
         self.ml_trading_bot = None
         
     def setup_markets_fast(self, num_trading_days=500):
-        """✅ FIXED: Fast setup with STOCK-SPECIFIC parameters"""
+        """[SUCCESS] FIXED: Fast setup with STOCK-SPECIFIC parameters"""
         try:
             # FIXED: Use the complete analysis method
             self.predictor.runCompleteAnalysis()
             
-            # ✅ CRITICAL FIX: Use stock-specific parameters instead of identical ones
+            # [SUCCESS] CRITICAL FIX: Use stock-specific parameters instead of identical ones
             # Calculate stock-specific volatility and expected return from historical data
             stock_volatility, stock_expected_return, initial_price = self._calculate_stock_parameters()
             
             # Create unique seed for each stock to avoid identical results
             stock_seed = hash(self.symbol) % 10000  # Deterministic but unique per stock
             
-            print(f"📊 {self.symbol} Parameters:")
+            print(f"[INFO] {self.symbol} Parameters:")
             print(f"   Initial Price: ${initial_price:.2f}")
             print(f"   Volatility: {stock_volatility:.3f}")
             print(f"   Expected Return: {stock_expected_return:.3f}")
@@ -419,7 +419,7 @@ class EnhancedUnifiedTradingSystem:
                 volatility=stock_volatility,
                 expected_yearly_return=stock_expected_return,
                 num_trading_days=num_trading_days,
-                seed=stock_seed  # ✅ UNIQUE seed per stock
+                seed=stock_seed  # [SUCCESS] UNIQUE seed per stock
             )
             # Use standard GBM simulation
             self.gbm_market.simulate(use_ml=False)
@@ -442,11 +442,11 @@ class EnhancedUnifiedTradingSystem:
             return False
     
     def _calculate_stock_parameters(self) -> Tuple[float, float, float]:
-        """✅ Calculate stock-specific parameters from historical data"""
+        """[SUCCESS] Calculate stock-specific parameters from historical data"""
         try:
             # Try to get parameters from predictor's historical data
             if hasattr(self.predictor, 'data') and len(self.predictor.data) > 20:
-                # ✅ FIXED: Use lowercase 'close' instead of 'Close'
+                # [SUCCESS] FIXED: Use lowercase 'close' instead of 'Close'
                 prices = self.predictor.data['close'].values  # Changed from 'Close' to 'close'
                 returns = np.diff(np.log(prices))  # Log returns
                 

@@ -10,7 +10,7 @@ from dotenv import load_dotenv  # For .env file support
 # Updated imports to reflect the new file structure
 from Market import Market, StockPredictor
 
-# ✅ UPDATED: Import enhanced grading system
+# [SUCCESS] UPDATED: Import enhanced grading system
 from Analysis import (
     ComprehensiveStockAnalyzer,
     SP500ComprehensiveAnalyzer, 
@@ -23,7 +23,7 @@ from Analysis import (
 from TradingBot import TradingBot, AutomatedTradingSystemLoop
 
 class ConfigurationManager:
-    """✅ NEW: Manages all configuration and environment variables"""
+    """[SUCCESS] NEW: Manages all configuration and environment variables"""
     
     def __init__(self):
         # Load .env file if it exists
@@ -43,18 +43,18 @@ class ConfigurationManager:
     def load_configuration(self):
         """Load configuration from environment variables"""
         
-        # ✅ Load Alpaca credentials
+        # [SUCCESS] Load Alpaca credentials
         self.config['alpaca_api_key'] = os.getenv('ALPACA_API_KEY')
         self.config['alpaca_secret_key'] = os.getenv('ALPACA_SECRET_KEY')
         
-        # ✅ Load OpenRouter credentials for GenAI
+        # [SUCCESS] Load OpenRouter credentials for GenAI
         self.config['openrouter_api_key'] = os.getenv('OPENROUTER_API_KEY')
         
-        # ✅ Load Discord credentials
+        # [SUCCESS] Load Discord credentials
         self.config['discord_bot_token'] = os.getenv('DISCORD_BOT_TOKEN')
         self.config['discord_channel_id'] = os.getenv('DISCORD_CHANNEL_ID')
         
-        # ✅ Load environment setting
+        # [SUCCESS] Load environment setting
         self.config['environment'] = os.getenv('ENVIRONMENT', 'development')
     
     def get_alpaca_credentials(self):
@@ -64,8 +64,8 @@ class ConfigurationManager:
         secret_key = self.config['alpaca_secret_key']
         
         if not api_key or not secret_key:
-            print("⚠️  Alpaca credentials not found in environment variables")
-            print("💡 Options:")
+            print("[WARNING] Alpaca credentials not found in environment variables")
+            print("[TIP] Options:")
             print("   1. Set ALPACA_API_KEY and ALPACA_SECRET_KEY environment variables")
             print("   2. Create a .env file with your credentials")
             print("   3. Enter credentials manually (not recommended for production)")
@@ -82,7 +82,7 @@ class ConfigurationManager:
                 api_key = input("Enter Alpaca API Key: ").strip()
                 secret_key = input("Enter Alpaca Secret Key: ").strip()
             else:
-                print("\n📋 Environment Variable Setup Instructions:")
+                print("\n[INFO] Environment Variable Setup Instructions:")
                 self._show_env_setup_instructions()
                 return None, None
         
@@ -97,13 +97,13 @@ class ConfigurationManager:
         token = self.config['discord_bot_token']
         channel_id = self.config['discord_channel_id']
         
-        # ✅ FIXED: Clean and validate channel ID
+        # [SUCCESS] FIXED: Clean and validate channel ID
         if channel_id:
             # Remove spaces and non-numeric characters
             channel_id = ''.join(filter(str.isdigit, str(channel_id)))
             
             if not channel_id:
-                print("❌ Invalid Discord Channel ID - must be numeric")
+                print("[ERROR] Invalid Discord Channel ID - must be numeric")
                 return {'token': None, 'channel_id': None}
         
         return {
@@ -123,7 +123,7 @@ class ConfigurationManager:
     def _create_env_file(self):
         """Create .env file with user input"""
         
-        print("\n📝 Creating .env file for secure credential storage...")
+        print("\n[INFO] Creating .env file for secure credential storage...")
         
         # Get credentials
         alpaca_key = input("Enter your Alpaca API Key: ").strip()
@@ -165,14 +165,14 @@ RISK_TOLERANCE=medium
             with open('.env', 'w') as f:
                 f.write(env_content)
             
-            print("✅ .env file created successfully!")
-            print("⚠️  Important: Add .env to your .gitignore file to keep credentials secure")
+            print("[SUCCESS] .env file created successfully!")
+            print("[WARNING] Important: Add .env to your .gitignore file to keep credentials secure")
             
             # Update gitignore
             self._update_gitignore()
             
         except Exception as e:
-            print(f"❌ Error creating .env file: {e}")
+            print(f"[ERROR] Error creating .env file: {e}")
     
     def _update_gitignore(self):
         """Update .gitignore to include .env file"""
@@ -189,24 +189,24 @@ RISK_TOLERANCE=medium
                 if '.env' not in content:
                     with open(gitignore_path, 'a') as f:
                         f.write('\n# Environment variables\n.env\n')
-                    print("✅ Updated .gitignore to include .env")
+                    print("[SUCCESS] Updated .gitignore to include .env")
             else:
                 # Create new .gitignore
                 with open(gitignore_path, 'w') as f:
                     f.write('# Environment variables\n.env\n\n# Python\n__pycache__/\n*.pyc\n*.pyo\n')
-                print("✅ Created .gitignore with .env entry")
+                print("[SUCCESS] Created .gitignore with .env entry")
                 
         except Exception as e:
-            print(f"⚠️  Could not update .gitignore: {e}")
+            print(f"[WARNING] Could not update .gitignore: {e}")
     
     def _show_env_setup_instructions(self):
         """Show detailed environment setup instructions"""
         
         print("\n" + "="*80)
-        print("🔧 ENVIRONMENT VARIABLE SETUP INSTRUCTIONS")
+        print("[CONFIG] ENVIRONMENT VARIABLE SETUP INSTRUCTIONS")
         print("="*80)
         
-        print("\n📋 Method 1: Create .env file (Recommended)")
+        print("\n[INFO] Method 1: Create .env file (Recommended)")
         print("Create a file named '.env' in your project directory with:")
         print("""
 # Alpaca Trading Configuration
@@ -224,7 +224,7 @@ DISCORD_CHANNEL_ID=your_discord_channel_id_here
 ENVIRONMENT=development
 """)
         
-        print("\n📋 Method 2: System Environment Variables")
+        print("\n[INFO] Method 2: System Environment Variables")
         print("Set these environment variables in your system:")
         
         if os.name == 'nt':  # Windows
@@ -238,7 +238,7 @@ ENVIRONMENT=development
             print("export ALPACA_SECRET_KEY=your_secret_here")
             print("export OPENROUTER_API_KEY=your_openrouter_key_here")
         
-        print("\n📋 Method 3: IDE Configuration")
+        print("\n[INFO] Method 3: IDE Configuration")
         print("Configure environment variables in your IDE settings:")
         print("• PyCharm: Run/Debug Configurations → Environment Variables")
         print("• VS Code: Create launch.json with env settings")
@@ -258,26 +258,26 @@ ENVIRONMENT=development
     def _display_config_value(self, key: str, value: str) -> str:
         """Display configuration value with first 4 and last 4 characters visible"""
         if not value:
-            return "❌ Not set"
+            return "[ERROR] Not set"
         
         # Special handling for channel ID (show full value since it's not sensitive)
         if 'channel_id' in key.lower():
-            return f"✅ {value}"
+            return f"[SUCCESS] {value}"
         
         # For API keys and tokens, show first 4 and last 4 characters
         if 'key' in key.lower() or 'token' in key.lower():
             if len(value) >= 8:
-                return f"✅ {value[:4]}****{value[-4:]}"
+                return f"[SUCCESS] {value[:4]}****{value[-4:]}"
             else:
-                return f"✅ {value[:2]}****{value[-2:]}"
+                return f"[SUCCESS] {value[:2]}****{value[-2:]}"
         
         # For other values, show normally
-        return f"✅ {value}"
+        return f"[SUCCESS] {value}"
     
     def _update_env_file_selective(self):
         """Update specific values in existing .env file"""
         
-        print("\n📝 SELECTIVE .ENV FILE UPDATE")
+        print("\n[INFO] SELECTIVE .ENV FILE UPDATE")
         print("="*50)
         
         # Load existing .env values
@@ -333,7 +333,7 @@ ENVIRONMENT=development
             if clean_value and len(clean_value) >= 10:  # Discord IDs are typically 17-19 digits
                 updated_values['DISCORD_CHANNEL_ID'] = clean_value
             else:
-                print("❌ Invalid Discord Channel ID - must be at least 10 digits")
+                print("[ERROR] Invalid Discord Channel ID - must be at least 10 digits")
         elif choice == "6":
             new_value = input("Enter new Environment (development/production): ").strip()
             if new_value:
@@ -342,10 +342,10 @@ ENVIRONMENT=development
             self._create_env_file()  # Use existing method for full update
             return
         elif choice == "8":
-            print("❌ Update cancelled")
+            print("[ERROR] Update cancelled")
             return
         else:
-            print("❌ Invalid choice")
+            print("[ERROR] Invalid choice")
             return
         
         # Write updated .env file
@@ -372,14 +372,14 @@ ENVIRONMENT=development
             with open('.env', 'w') as f:
                 f.write(env_content)
             
-            print("✅ .env file updated successfully!")
+            print("[SUCCESS] .env file updated successfully!")
             
             # Reload configuration
             load_dotenv()
             self.load_configuration()
             
         except Exception as e:
-            print(f"❌ Error updating .env file: {e}")
+            print(f"[ERROR] Error updating .env file: {e}")
             
     def clear_environment_variables(self):
         """Clear environment variables completely"""
@@ -389,7 +389,7 @@ ENVIRONMENT=development
             'DISCORD_BOT_TOKEN', 'DISCORD_CHANNEL_ID', 'ENVIRONMENT'
         ]
         
-        print("🧹 Clearing environment variables...")
+        print("[CONFIG] Clearing environment variables...")
         
         for var in env_vars_to_clear:
             # Clear from current session
@@ -405,8 +405,8 @@ ENVIRONMENT=development
         # Reload configuration
         self.load_configuration()
         
-        print("✅ Environment variables cleared!")
-        print("💡 Restart your IDE/terminal to ensure complete cleanup")
+        print("[SUCCESS] Environment variables cleared!")
+        print("[TIP] Restart your IDE/terminal to ensure complete cleanup")
 
 
 def save_analysis_to_preferences(result: dict, rank: int = 1):

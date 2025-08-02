@@ -17,7 +17,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from Genesis import Genesis
 except ImportError:
-    print("⚠️  Genesis.py not found. GenAI scoring will be disabled.")
+    print("[WARNING] Genesis.py not found. GenAI scoring will be disabled.")
     Genesis = None
 
 class SimplifiedGradingSystem(Market):
@@ -47,10 +47,10 @@ class SimplifiedGradingSystem(Market):
         try:
             df = pd.read_csv(filename)
             if df.empty:
-                print("⚠️  S&P 500 results file is empty")
+                print("[WARNING] S&P 500 results file is empty")
                 return None
             
-            print(f"📊 Available columns in CSV: {list(df.columns)}")
+            print(f"[INFO] Available columns in CSV: {list(df.columns)}")
             
             benchmarks = {}
             
@@ -61,7 +61,7 @@ class SimplifiedGradingSystem(Market):
                 avg_returns = (df['gbm_prediction_return'] + df['ml_prediction_return']) / 2
                 benchmarks['best_return'] = avg_returns.max()
             else:
-                print("⚠️  Return columns not found, using fallback")
+                print("[WARNING] Return columns not found, using fallback")
                 return None
             
             # Use actual AUC and slope values
@@ -88,7 +88,7 @@ class SimplifiedGradingSystem(Market):
             elif 'sharpe_ratio' in df.columns:
                 benchmarks['best_sharpe'] = df['sharpe_ratio'].max()
             else:
-                print("⚠️  Sharpe ratio column not found, using fallback")
+                print("[WARNING] Sharpe ratio column not found, using fallback")
                 return None
             
             # Ensure no benchmark is zero or negative
@@ -96,27 +96,27 @@ class SimplifiedGradingSystem(Market):
                 if value <= 0:
                     benchmarks[key] = 0.01
             
-            print(f"📊 Benchmarks loaded:")
+            print(f"[INFO] Benchmarks loaded:")
             for key, value in benchmarks.items():
                 print(f"   {key}: {value:.6f}")
             
             return benchmarks
             
         except Exception as e:
-            print(f"❌ Error loading S&P 500 benchmarks: {e}")
+            print(f"[ERROR] Error loading S&P 500 benchmarks: {e}")
             return None
 
     @staticmethod
     def calculate_raw_performance_score(result: Dict) -> float:
-        """✅ ENHANCED: Calculate raw performance score with better scaling for SimplifiedGradingSystem"""
+        """[SUCCESS] ENHANCED: Calculate raw performance score with better scaling for SimplifiedGradingSystem"""
         try:
-            # ✅ FIXED: Use ML data only (no GBM)
+            # [SUCCESS] FIXED: Use ML data only (no GBM)
             ml_return = result['ml_stability']['total_return']
             ml_auc = result['ml_stability']['auc']
             ml_slope = result['ml_stability']['slope']
             ml_sharpe = result['ml_stability']['sharpe_ratio']
             
-            # ✅ ENHANCED: Better scaling for realistic scores (30-90 range)
+            # [SUCCESS] ENHANCED: Better scaling for realistic scores (30-90 range)
             # Base score starts at 50 (average performance)
             base_score = 50.0
             
@@ -154,7 +154,7 @@ class SimplifiedGradingSystem(Market):
             # Ensure score is in reasonable range (20-95)
             raw_score = max(20, min(95, raw_score))
             
-            print(f"📊 Score Breakdown:")
+            print(f"[INFO] Score Breakdown:")
             print(f"   Base Score: {base_score:.1f}")
             print(f"   Return Bonus: {return_bonus:.1f} (from {ml_return:.3f})")
             print(f"   Sharpe Bonus: {sharpe_bonus:.1f} (from {ml_sharpe:.3f})")
@@ -165,7 +165,7 @@ class SimplifiedGradingSystem(Market):
             return raw_score
             
         except Exception as e:
-            print(f"❌ Error calculating raw score: {e}")
+            print(f"[ERROR] Error calculating raw score: {e}")
             return 50.0  # Return average score on error
 
     @staticmethod
@@ -272,9 +272,9 @@ class GenAIStockEvaluator(Market):
         self.genesis_instance = None
         
         if not self.api_key:
-            print("⚠️  No OpenRouter API key provided. GenAI evaluation disabled.")
+            print("[WARNING] No OpenRouter API key provided. GenAI evaluation disabled.")
         elif Genesis is None:
-            print("⚠️  Genesis module not available. GenAI evaluation disabled.")
+            print("[WARNING] Genesis module not available. GenAI evaluation disabled.")
         else:
             self._initialize_genesis()
     
@@ -292,7 +292,7 @@ class GenAIStockEvaluator(Market):
             self.genesis_instance.PushMsgToSystem(system_prompt)
             
         except Exception as e:
-            print(f"❌ Failed to initialize Genesis: {e}")
+            print(f"[ERROR] Failed to initialize Genesis: {e}")
             self.genesis_instance = None
     
     def _get_stock_evaluation_system_prompt(self) -> str:
@@ -351,7 +351,7 @@ class GenAIStockEvaluator(Market):
     def evaluate_single_stock(self, symbol: str) -> Optional[float]:
         """Evaluate a single stock using GenAI"""
         if not self.genesis_instance:
-            print("⚠️  GenAI evaluation not available")
+            print("[WARNING] GenAI evaluation not available")
             return None
         
         try:
@@ -370,30 +370,30 @@ class GenAIStockEvaluator(Market):
             )
             
             if not response:
-                print(f"❌ No response from GenAI for {symbol}")
+                print(f"[ERROR] No response from GenAI for {symbol}")
                 return None
             
             # Parse JSON response
             score = self._parse_single_stock_response(response, symbol)
             
             if score is not None:
-                print(f"🤖 GenAI Score for {symbol}: {score:.3f}")
+                print(f"[AI] GenAI Score for {symbol}: {score:.3f}")
             
             return score
             
         except Exception as e:
-            print(f"❌ Error evaluating {symbol}: {e}")
+            print(f"[ERROR] Error evaluating {symbol}: {e}")
             return None
     
     def evaluate_multiple_stocks(self, symbols: List[str]) -> Dict[str, Optional[float]]:
         """Evaluate ALL stocks in single batch with 10k token limit"""
         if not self.genesis_instance:
-            print("⚠️  GenAI evaluation not available")
+            print("[WARNING] GenAI evaluation not available")
             return {symbol: None for symbol in symbols}
         
         try:
-            print(f"🚀 SINGLE BATCH PROCESSING: {len(symbols)} stocks with Gemini 2.5 Flash")
-            print(f"📊 Using 10k token limit for complete S&P 500 coverage")
+            print(f"[START] SINGLE BATCH PROCESSING: {len(symbols)} stocks with Gemini 2.5 Flash")
+            print(f"[INFO] Using 10k token limit for complete S&P 500 coverage")
             
             # Clear previous user content
             self.genesis_instance.userContents.clear()
@@ -402,8 +402,8 @@ class GenAIStockEvaluator(Market):
             symbols_text = ", ".join(symbols)
             self.genesis_instance.PushMsgToUser("text", symbols_text)
             
-            print(f"🔄 Sending request to GenAI for {len(symbols)} symbols...")
-            print(f"📝 Input length: {len(symbols_text)} characters")
+            print(f"[STEP] Sending request to GenAI for {len(symbols)} symbols...")
+            print(f"[INFO] Input length: {len(symbols_text)} characters")
             
             # OPTIMIZED: 10k token limit for Gemini 2.5 Flash
             response = self.genesis_instance.TXRX(
@@ -414,23 +414,23 @@ class GenAIStockEvaluator(Market):
             )
             
             if not response:
-                print(f"❌ No response from GenAI")
+                print(f"[ERROR] No response from GenAI")
                 return {symbol: None for symbol in symbols}
             
-            print(f"✅ Received response from GenAI")
-            print(f"📏 Response length: {len(response)} characters")
+            print(f"[SUCCESS] Received response from GenAI")
+            print(f"[INFO] Response length: {len(response)} characters")
             
             # Parse JSON response
             scores = self._parse_multiple_stocks_response(response, symbols)
             
             successful_scores = len([s for s in scores.values() if s is not None])
-            print(f"🎯 SINGLE BATCH RESULTS: {successful_scores}/{len(symbols)} symbols evaluated successfully")
-            print(f"📊 Success rate: {successful_scores/len(symbols)*100:.1f}%")
+            print(f"[RESULT] SINGLE BATCH RESULTS: {successful_scores}/{len(symbols)} symbols evaluated successfully")
+            print(f"[INFO] Success rate: {successful_scores/len(symbols)*100:.1f}%")
             
             return scores
             
         except Exception as e:
-            print(f"❌ Error in single batch evaluation: {e}")
+            print(f"[ERROR] Error in single batch evaluation: {e}")
             return {symbol: None for symbol in symbols}
     
     def _parse_single_stock_response(self, response: str, symbol: str) -> Optional[float]:
@@ -467,11 +467,11 @@ class GenAIStockEvaluator(Market):
                     score = score / 100
                 return max(0.0, min(1.0, score))
             
-            print(f"⚠️  Could not parse GenAI response for {symbol}: {response}")
+            print(f"[WARNING] Could not parse GenAI response for {symbol}: {response}")
             return None
             
         except Exception as e:
-            print(f"❌ Error parsing response for {symbol}: {e}")
+            print(f"[ERROR] Error parsing response for {symbol}: {e}")
             return None
     
     def _parse_multiple_stocks_response(self, response: str, symbols: List[str]) -> Dict[str, Optional[float]]:
@@ -486,7 +486,7 @@ class GenAIStockEvaluator(Market):
             # Find the start and end of JSON object
             start_idx = response.find('{')
             if start_idx == -1:
-                print(f"⚠️  No JSON object found in response")
+                print(f"[WARNING] No JSON object found in response")
                 return {symbol: None for symbol in symbols}
             
             # Find the matching closing brace
@@ -504,7 +504,7 @@ class GenAIStockEvaluator(Market):
             
             if end_idx == -1:
                 # JSON might be truncated, try to find the last complete entry
-                print(f"⚠️  JSON appears to be truncated, attempting partial parsing...")
+                print(f"[WARNING] JSON appears to be truncated, attempting partial parsing...")
                 
                 # Find the last complete key-value pair
                 last_comma = response.rfind(',')
@@ -513,7 +513,7 @@ class GenAIStockEvaluator(Market):
                     truncated_json = response[start_idx:last_comma] + '}'
                     try:
                         data = json.loads(truncated_json)
-                        print(f"✅ Successfully parsed truncated JSON with {len(data)} entries")
+                        print(f"[SUCCESS] Successfully parsed truncated JSON with {len(data)} entries")
                     except:
                         # If that fails, try to find last complete entry before comma
                         entries = response[start_idx+1:last_comma].split(',')
@@ -527,9 +527,9 @@ class GenAIStockEvaluator(Market):
                             reconstructed = '{' + ','.join(valid_entries) + '}'
                             try:
                                 data = json.loads(reconstructed)
-                                print(f"✅ Reconstructed partial JSON with {len(data)} entries")
+                                print(f"[SUCCESS] Reconstructed partial JSON with {len(data)} entries")
                             except Exception as e:
-                                print(f"❌ Failed to reconstruct JSON: {e}")
+                                print(f"[ERROR] Failed to reconstruct JSON: {e}")
                                 return {symbol: None for symbol in symbols}
                         else:
                             return {symbol: None for symbol in symbols}
@@ -539,7 +539,7 @@ class GenAIStockEvaluator(Market):
                 # Complete JSON found
                 json_str = response[start_idx:end_idx]
                 data = json.loads(json_str)
-                print(f"✅ Successfully parsed complete JSON with {len(data)} entries")
+                print(f"[SUCCESS] Successfully parsed complete JSON with {len(data)} entries")
             
             # Match symbols with scores more flexibly
             matched_count = 0
@@ -568,16 +568,16 @@ class GenAIStockEvaluator(Market):
                 
                 result[symbol] = found_score
             
-            print(f"📊 GenAI Matching Summary: {matched_count}/{len(symbols)} symbols matched")
+            print(f"[INFO] GenAI Matching Summary: {matched_count}/{len(symbols)} symbols matched")
             
             return result
             
         except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error: {e}")
-            print(f"🔍 Response preview: {response[:200]}...")
+            print(f"[ERROR] JSON parsing error: {e}")
+            print(f"[DEBUG] Response preview: {response[:200]}...")
             return {symbol: None for symbol in symbols}
         except Exception as e:
-            print(f"❌ Error parsing multiple stocks response: {e}")
+            print(f"[ERROR] Error parsing multiple stocks response: {e}")
             return {symbol: None for symbol in symbols}
 
 class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
@@ -667,7 +667,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
                 }
         
         # Display grades in proper order
-        print(f"✅ STRICT PERCENTILE GRADING APPLIED:")
+        print(f"[SUCCESS] STRICT PERCENTILE GRADING APPLIED:")
         
         # Count grades in proper order
         grade_order = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F']
@@ -689,23 +689,23 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
 
     @staticmethod
     def get_relative_grade_from_csv(result: Dict, symbol: str) -> Tuple[str, str, float, Dict]:
-        """✅ FIXED: Get grade by finding closest score match in S&P 500 CSV with proper percentile calculation""" 
+        """[SUCCESS] FIXED: Get grade by finding closest score match in S&P 500 CSV with proper percentile calculation"""
         try:
-            # ✅ FIXED: Use the actual S&P 500 CSV file that exists
+            # [SUCCESS] FIXED: Use the actual S&P 500 CSV file that exists
             csv_file = "sp500_enhanced_yfinance_results.csv"
             
             if not os.path.exists(csv_file):
-                print(f"❌ S&P 500 benchmark file not found: {csv_file}")
+                print(f"[ERROR] S&P 500 benchmark file not found: {csv_file}")
                 return EnhancedGradingWithGenAI._fallback_absolute_grading(result)
             
             # Load S&P 500 data
             csv_data = pd.read_csv(csv_file)
             
             if csv_data.empty or 'score' not in csv_data.columns:
-                print("❌ Invalid S&P 500 data structure")
+                print("[ERROR] Invalid S&P 500 data structure")
                 return EnhancedGradingWithGenAI._fallback_absolute_grading(result)
             
-            print(f"✅ Using S&P 500 data from: {csv_file} ({len(csv_data)} stocks)")
+            print(f"[SUCCESS] Using S&P 500 data from: {csv_file} ({len(csv_data)} stocks)")
             
             # Calculate raw score for current stock using same method as S&P 500
             raw_score = SimplifiedGradingSystem.calculate_raw_performance_score(result)
@@ -715,10 +715,10 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
             csv_data_clean = csv_data_clean[csv_data_clean['score'] >= 0]  # Remove negative scores
             
             if len(csv_data_clean) == 0:
-                print("❌ No valid score/grade data in CSV")
+                print("[ERROR] No valid score/grade data in CSV")
                 return EnhancedGradingWithGenAI._fallback_absolute_grading(result)
             
-            # ✅ FIXED: Calculate percentile based on position in sorted S&P 500 scores
+            # [SUCCESS] FIXED: Calculate percentile based on position in sorted S&P 500 scores
             all_sp500_scores = sorted(csv_data_clean['score'].values, reverse=True)  # Highest to lowest
             
             # Find where current score would rank
@@ -726,7 +726,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
             percentile_rank = (better_than_count / len(all_sp500_scores)) * 100  # 0-100%
             estimated_rank = len(all_sp500_scores) - better_than_count + 1
             
-            # ✅ FIXED: Use PROPER grade distribution based on actual S&P 500 performance
+            # [SUCCESS] FIXED: Use PROPER grade distribution based on actual S&P 500 performance
             # If the stock performs better than most S&P 500 stocks, it should get a good grade
             if raw_score >= 80:           # Exceptional performance
                 grade, category = 'A+', 'Excellent'
@@ -771,7 +771,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
                 'raw_score': raw_score
             }
             
-            print(f"✅ RELATIVE GRADING vs S&P 500:")
+            print(f"[SUCCESS] RELATIVE GRADING vs S&P 500:")
             print(f"   Current Score: {raw_score:.1f}")
             print(f"   Percentile: {percentile_rank:.1f}% (Rank {estimated_rank}/{len(all_sp500_scores)})")
             print(f"   Assigned Grade: {grade} ({category})")
@@ -780,7 +780,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
             return grade, category, raw_score, grade_info
             
         except Exception as e:
-            print(f"❌ Error in relative grading: {e}")
+            print(f"[ERROR] Error in relative grading: {e}")
             return EnhancedGradingWithGenAI._fallback_absolute_grading(result)
 
     @staticmethod
@@ -802,7 +802,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
     def get_enhanced_grade_with_genai(self, analysis_for_grading: Dict, symbol: str) -> Tuple[str, str, float, Dict]:
         """Enhanced grading method that combines traditional and GenAI scoring"""
         
-        print(f"\n🤖 APPLYING ENHANCED GRADING WITH GENAI for {symbol}")
+        print(f"\n[AI] APPLYING ENHANCED GRADING WITH GENAI for {symbol}")
         
         if self.genai_evaluator and self.genai_evaluator.genesis_instance:
             # Get GenAI evaluation
@@ -831,7 +831,7 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
                     'rank_estimate': 'N/A'  # Add this for compatibility
                 }
                 
-                print(f"✅ Enhanced Grading Results:")
+                print(f"[SUCCESS] Enhanced Grading Results:")
                 print(f"   Traditional Score: {traditional_score:.1f}")
                 print(f"   GenAI Score: {genai_score:.3f}")
                 print(f"   Enhanced Score: {enhanced_score:.1f}")
@@ -840,5 +840,5 @@ class EnhancedGradingWithGenAI(SimplifiedGradingSystem):
                 return grade, category, enhanced_score, grade_info
         
         # Fallback to relative grading if GenAI unavailable
-        print("⚠️  GenAI unavailable, using relative grading fallback")
+        print("[WARNING] GenAI unavailable, using relative grading fallback")
         return self.get_relative_grade_from_csv(analysis_for_grading, symbol)

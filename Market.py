@@ -22,7 +22,7 @@ try:
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
-    print("⚠️  yfinance not installed. Install with: pip install yfinance")
+    print("[WARNING] yfinance not installed. Install with: pip install yfinance")
 
 from Utils import TRADING_DAYS_PER_YEAR, round_to_decimals, generate_z
 
@@ -117,7 +117,7 @@ class YahooDataFetcher(DataFetcher):
             max_start_date = datetime.datetime(1960, 1, 1)  # Go back to 2000 for maximum data
             actual_start = min(startDate, max_start_date)
             
-            print(f"📊 Fetching MAXIMUM historical data for {symbol}")
+            print(f"[INFO] Fetching MAXIMUM historical data for {symbol}")
             print(f"   Requesting from: {actual_start.date()} to {endDate.date()}")
             print(f"   Data source: Yahoo Finance (yfinance)")
             
@@ -134,7 +134,7 @@ class YahooDataFetcher(DataFetcher):
                     auto_adjust=True
                 )
             except Exception as e1:
-                print(f"⚠️  Modern parameters failed, trying basic parameters...")
+                print(f"[WARNING] Modern parameters failed, trying basic parameters...")
                 try:
                     # Fallback: Basic parameters only
                     data = ticker.history(
@@ -142,7 +142,7 @@ class YahooDataFetcher(DataFetcher):
                         end=endDate
                     )
                 except Exception as e2:
-                    print(f"⚠️  Basic parameters failed, trying period method...")
+                    print(f"[WARNING] Basic parameters failed, trying period method...")
                     # Last resort: Use period instead of start/end
                     data = ticker.history(period="max")
             
@@ -193,7 +193,7 @@ class YahooDataFetcher(DataFetcher):
             if data.empty:
                 raise ValueError(f"No valid data after cleaning for {symbol}")
             
-            print(f"✅ Yahoo Finance: Fetched {len(data)} data points")
+            print(f"[SUCCESS] Yahoo Finance: Fetched {len(data)} data points")
             print(f"   Date range: {data['timestamp'].min().date()} to {data['timestamp'].max().date()}")
             print(f"   Years of data: {(data['timestamp'].max() - data['timestamp'].min()).days / 365.25:.1f}")
             print(f"   Columns: {list(data.columns)}")
@@ -201,7 +201,7 @@ class YahooDataFetcher(DataFetcher):
             return data
             
         except Exception as e:
-            print(f"❌ Yahoo Finance error for {symbol}: {str(e)}")
+            print(f"[ERROR] Yahoo Finance error for {symbol}: {str(e)}")
             raise ValueError(f"Failed to fetch data from Yahoo Finance: {str(e)}")
     
     def isAvailable(self) -> bool:
@@ -230,7 +230,7 @@ class AlpacaDataFetcher(DataFetcher):
             max_start_date = datetime.datetime(2016, 1, 1)  # Alpaca has data from ~2016
             actual_start = min(startDate, max_start_date)
             
-            print(f"📊 Fetching data for {symbol} (Alpaca fallback)")
+            print(f"[INFO] Fetching data for {symbol} (Alpaca fallback)")
             print(f"   Requesting from: {actual_start.date()} to {endDate.date()}")
             print(f"   Data source: Alpaca Markets")
             
@@ -247,13 +247,13 @@ class AlpacaDataFetcher(DataFetcher):
             # Reset index for easier manipulation
             data = data.reset_index()
             
-            print(f"✅ Alpaca: Fetched {len(data)} data points")
+            print(f"[SUCCESS] Alpaca: Fetched {len(data)} data points")
             print(f"   Date range: {data['timestamp'].min().date()} to {data['timestamp'].max().date()}")
             
             return data
             
         except Exception as e:
-            print(f"❌ Alpaca error for {symbol}: {str(e)}")
+            print(f"[ERROR] Alpaca error for {symbol}: {str(e)}")
             raise ValueError(f"Failed to fetch data from Alpaca: {str(e)}")
     
     def isAvailable(self) -> bool:
@@ -277,24 +277,24 @@ class HybridDataFetcher(DataFetcher):
         # First try Yahoo Finance (primary)
         if self.yahooFetcher.isAvailable():
             try:
-                print("🔄 Attempting Yahoo Finance (primary source)...")
+                print("[INFO] Attempting Yahoo Finance (primary source)...")
                 data = self.yahooFetcher.fetchData(symbol, startDate, endDate)
                 self.lastUsedSource = "yfinance"
-                print("✅ Successfully used Yahoo Finance")
+                print("[SUCCESS] Successfully used Yahoo Finance")
                 return data
             except Exception as e:
-                print(f"⚠️  Yahoo Finance failed: {str(e)}")
-                print("🔄 Falling back to Alpaca...")
+                print(f"[WARNING] Yahoo Finance failed: {str(e)}")
+                print("[INFO] Falling back to Alpaca...")
         
         # Fallback to Alpaca
         if self.alpacaFetcher and self.alpacaFetcher.isAvailable():
             try:
                 data = self.alpacaFetcher.fetchData(symbol, startDate, endDate)
                 self.lastUsedSource = "alpaca"
-                print("✅ Successfully used Alpaca (fallback)")
+                print("[SUCCESS] Successfully used Alpaca (fallback)")
                 return data
             except Exception as e:
-                print(f"❌ Alpaca also failed: {str(e)}")
+                print(f"[ERROR] Alpaca also failed: {str(e)}")
                 raise ValueError(f"Both data sources failed for {symbol}")
         
         # No data sources available
@@ -353,12 +353,12 @@ class StockPredictor:
         if endDate is None:
             endDate = datetime.datetime.now()
         
-        print(f"🚀 Fetching MAXIMUM historical data for {self.symbol}")
+        print(f"[START] Fetching MAXIMUM historical data for {self.symbol}")
         self.data = self.dataFetcher.fetchData(self.symbol, startDate, endDate)
         self.dataSource = self.dataFetcher.getDataSource()
         
         if self.data is not None and not self.data.empty:
-            print(f"📈 Data summary for {self.symbol}:")
+            print(f"[SUMMARY] Data summary for {self.symbol}:")
             print(f"   Source: {self.dataSource}")
             print(f"   Records: {len(self.data)}")
             print(f"   Date range: {self.data['timestamp'].min()} to {self.data['timestamp'].max()}")
@@ -502,7 +502,7 @@ class StockPredictor:
         avgReturn = dailyReturns.mean()
         returnStd = dailyReturns.std()
         
-        print(f"Historical daily return: {avgReturn:.6f} ± {returnStd:.6f}")
+        print(f"Historical daily return: {avgReturn:.6f} +/- {returnStd:.6f}")
         
         for i, futureDate in enumerate(self.futureDates):
             try:
@@ -635,8 +635,8 @@ class MLMarket(BaseMarket):
                 else:
                     self.prices.append(self.initialPrice)
             
-            print(f"✓ ML simulation completed")
-            print(f"✓ Price range: ${min(self.prices):.2f} - ${max(self.prices):.2f}")
+            print(f"[SUCCESS] ML simulation completed")
+            print(f"[INFO] Price range: ${min(self.prices):.2f} - ${max(self.prices):.2f}")
             
         except Exception as e:
             print(f"Error in ML simulation: {str(e)}")

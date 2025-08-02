@@ -6,15 +6,15 @@ import pandas as pd
 from typing import List, Optional, Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# ✅ CLEAN: External imports first
+# [SUCCESS] CLEAN: External imports first
 from Market import Market
 
-# ✅ CLEAN: Internal imports second - ML-only system
+# [SUCCESS] CLEAN: Internal imports second - ML-only system
 from .StockAnalyzer import ComprehensiveStockAnalyzer
 from .GradingSystem import SimplifiedGradingSystem
 
 class SP500ComprehensiveAnalyzer(Market):
-    """✅ FIXED: ML-only analyzer with absolute grading for S&P 500 stocks"""
+    """[SUCCESS] FIXED: ML-only analyzer with absolute grading for S&P 500 stocks"""
     
     def __init__(self, api_key: str = None, secret_key: str = None):
         super().__init__()
@@ -22,17 +22,17 @@ class SP500ComprehensiveAnalyzer(Market):
         self.secret_key = secret_key
         self.results = []
         
-        # ✅ FIXED: Use SimplifiedGradingSystem for absolute grading
+        # [SUCCESS] FIXED: Use SimplifiedGradingSystem for absolute grading
         self.grader = SimplifiedGradingSystem()
-        print("📊 Using ML-only system with absolute grading")
+        print("[INFO] Using ML-only system with absolute grading")
     
     def run_comprehensive_analysis(self, max_workers: int = 3, sample_size: Optional[int] = None):
-        """✅ FIXED: Single-pass ML-only analysis with absolute grading"""
+        """[SUCCESS] FIXED: Single-pass ML-only analysis with absolute grading"""
         
         print("="*80)
         print("S&P 500 COMPREHENSIVE ANALYSIS - ML-ONLY WITH ABSOLUTE GRADING")
         print("="*80)
-        print(f"🚀 ML-only system with simplified absolute grading")
+        print(f"[START] ML-only system with simplified absolute grading")
         
         # Get symbols
         symbols = self._get_sp500_symbols()
@@ -43,7 +43,7 @@ class SP500ComprehensiveAnalyzer(Market):
         all_results = self._analyze_all_stocks(symbols, max_workers)
         
         if not all_results:
-            print("❌ No successful analyses completed")
+            print("[ERROR] No successful analyses completed")
             return
         
         # Display and save
@@ -53,7 +53,7 @@ class SP500ComprehensiveAnalyzer(Market):
         return all_results
     
     def _analyze_all_stocks(self, symbols: List[str], max_workers: int) -> List[Dict]:
-        """✅ FIXED: Analyze all stocks using ML-only system"""
+        """[SUCCESS] FIXED: Analyze all stocks using ML-only system"""
         
         successful_results = []
         failed_symbols = []
@@ -78,7 +78,7 @@ class SP500ComprehensiveAnalyzer(Market):
                     print(f"✗ {symbol}: error - {e}")
                     failed_symbols.append(symbol)
         
-        print(f"\n✅ Analysis Summary:")
+        print(f"\n[SUCCESS] Analysis Summary:")
         print(f"   Successful: {len(successful_results)}")
         print(f"   Failed: {len(failed_symbols)}")
         
@@ -92,11 +92,11 @@ class SP500ComprehensiveAnalyzer(Market):
         return successful_results
     
     def analyze_single_stock(self, symbol: str) -> Dict:
-        """✅ FIXED: Analyze a single stock using ML-only system with absolute grading"""
+        """[SUCCESS] FIXED: Analyze a single stock using ML-only system with absolute grading"""
         try:
             print(f"Analyzing {symbol}...")
             
-            # ✅ FIXED: Use ComprehensiveStockAnalyzer (ML-only)
+            # [SUCCESS] FIXED: Use ComprehensiveStockAnalyzer (ML-only)
             analyzer = ComprehensiveStockAnalyzer(self.api_key, self.secret_key)
             result = analyzer.analyze_stock_comprehensive(symbol, show_visualization=False)
             
@@ -112,10 +112,10 @@ class SP500ComprehensiveAnalyzer(Market):
             return None
     
     def _display_results(self, all_results: List[Dict]):
-        """✅ FIXED: Display ML-only results with absolute grading"""
+        """[SUCCESS] FIXED: Display ML-only results with absolute grading"""
         
         print(f"\n{'='*80}")
-        print("📊 S&P 500 ML-ONLY ANALYSIS WITH ABSOLUTE GRADING")
+        print("[INFO] S&P 500 ML-ONLY ANALYSIS WITH ABSOLUTE GRADING")
         print(f"{'='*80}")
         
         print(f"Total Stocks Analyzed: {len(all_results)}")
@@ -134,7 +134,7 @@ class SP500ComprehensiveAnalyzer(Market):
         
         # Score statistics
         scores = [r['score'] for r in all_results]
-        print(f"\n📊 SCORE STATISTICS:")
+        print(f"\n[INFO] SCORE STATISTICS:")
         print(f"   Range: {min(scores):.1f} - {max(scores):.1f}")
         print(f"   Average: {sum(scores)/len(scores):.1f}")
         print(f"   Median: {sorted(scores)[len(scores)//2]:.1f}")
@@ -156,7 +156,7 @@ class SP500ComprehensiveAnalyzer(Market):
         
         # Investment recommendations
         print(f"\n{'='*70}")
-        print("💡 INVESTMENT RECOMMENDATIONS (ABSOLUTE GRADING)")
+        print("[TIP] INVESTMENT RECOMMENDATIONS (ABSOLUTE GRADING)")
         print(f"{'='*70}")
         
         print(f"EXCELLENT (A-grades): {len(excellent_stocks)} stocks - Strong buy candidates")
@@ -174,7 +174,7 @@ class SP500ComprehensiveAnalyzer(Market):
                       f"Strategy: {strategy_name}, Return: {best_return:.1f}%)")
         
         # ML-specific statistics
-        print(f"\n📊 ML SYSTEM SUMMARY:")
+        print(f"\n[INFO] ML SYSTEM SUMMARY:")
         print(f"   Grading Method: Absolute (SimplifiedGradingSystem)")
         print(f"   Data Source: ML predictions only")
         print(f"   Best Score: {max(scores):.1f}/100")
@@ -204,14 +204,14 @@ class SP500ComprehensiveAnalyzer(Market):
         try:
             df = pd.DataFrame(results)
             df.to_csv(filename, index=False)
-            print(f"✅ Results saved to {filename}")
+            print(f"[SUCCESS] Results saved to {filename}")
         except Exception as e:
-            print(f"❌ Error saving results: {e}")
+            print(f"[ERROR] Error saving results: {e}")
 
     def analyze_top_performers(self, grade_threshold: str = 'B', max_stocks: int = 20):
-        """✅ NEW: Analyze only top-performing stocks for detailed review"""
+        """[SUCCESS] NEW: Analyze only top-performing stocks for detailed review"""
         
-        print(f"\n🎯 ANALYZING TOP PERFORMERS (Grade {grade_threshold}+ only)")
+        print(f"\n[TARGET] ANALYZING TOP PERFORMERS (Grade {grade_threshold}+ only)")
         print("="*60)
         
         # Define grade hierarchy
@@ -227,19 +227,19 @@ class SP500ComprehensiveAnalyzer(Market):
             result = self.analyze_single_stock(symbol)
             if result and result['grade'] in target_grades:
                 top_performers.append(result)
-                print(f"✅ {symbol}: {result['grade']} (Score: {result['score']:.1f}) - QUALIFIED")
+                print(f"[SUCCESS] {symbol}: {result['grade']} (Score: {result['score']:.1f}) - QUALIFIED")
                 
                 if len(top_performers) >= max_stocks:
                     break
             elif result:
-                print(f"⚪ {symbol}: {result['grade']} (Score: {result['score']:.1f}) - Below threshold")
+                print(f"[INFO] {symbol}: {result['grade']} (Score: {result['score']:.1f}) - Below threshold")
         
         # Sort and rank
         top_performers.sort(key=lambda x: x['score'], reverse=True)
         for i, result in enumerate(top_performers, 1):
             result['rank'] = i
         
-        print(f"\n🏆 FOUND {len(top_performers)} TOP PERFORMERS:")
+        print(f"\n[SUCCESS] FOUND {len(top_performers)} TOP PERFORMERS:")
         self._display_results(top_performers)
         
         return top_performers
