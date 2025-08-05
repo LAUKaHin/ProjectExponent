@@ -120,13 +120,13 @@ class SimplifiedGradingSystem(Market):
             # Base score starts at 50 (average performance)
             base_score = 50.0
             
-            # Return component (most important) - scale to ±30 points
+            # Return component (most important) - scale to +/-30 points
             if ml_return > 0:
                 return_bonus = min(30, ml_return * 200)  # Positive returns get bonus
             else:
                 return_bonus = max(-20, ml_return * 100)  # Negative returns get penalty
             
-            # Sharpe ratio component - scale to ±15 points
+            # Sharpe ratio component - scale to +/-15 points
             if ml_sharpe > 1.0:
                 sharpe_bonus = min(15, (ml_sharpe - 1.0) * 10)
             elif ml_sharpe > 0:
@@ -134,14 +134,14 @@ class SimplifiedGradingSystem(Market):
             else:
                 sharpe_bonus = -10  # Penalty for negative Sharpe
             
-            # AUC component - scale to ±10 points
+            # AUC component - scale to +/-10 points
             auc_normalized = abs(ml_auc) / 1000.0  # Normalize AUC
             if auc_normalized > 1.0:
                 auc_bonus = min(10, (auc_normalized - 1.0) * 5)
             else:
                 auc_bonus = max(-5, (auc_normalized - 1.0) * 3)
             
-            # Slope component - scale to ±5 points
+            # Slope component - scale to +/-5 points
             slope_normalized = abs(ml_slope) * 1000  # Normalize slope
             if slope_normalized > 1.0:
                 slope_bonus = min(5, (slope_normalized - 1.0) * 2)

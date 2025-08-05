@@ -720,8 +720,8 @@ class Market(BaseMarket):
                 else:
                     self.prices.append(self.initialPrice)
             
-            print(f"✓ ML simulation completed")
-            print(f"✓ Price range: ${min(self.prices):.2f} - ${max(self.prices):.2f}")
+            print(f"[SUCCESS] ML simulation completed")
+            print(f"[SUCCESS] Price range: ${min(self.prices):.2f} - ${max(self.prices):.2f}")
             
         except Exception as e:
             print(f"Error in ML simulation: {str(e)}")

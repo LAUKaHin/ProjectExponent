@@ -378,7 +378,7 @@ class ComprehensiveStockAnalyzer(Market):
         print(f"   Best Return: {analysis['best_strategy_return']:.4f}")
         print(f"   Strategy Params: {analysis['best_strategy_params']}")
         
-        print(f"\n🎓 ABSOLUTE GRADING:")
+        print(f"\n[GRADUATION] ABSOLUTE GRADING:")
         print(f"   Grade: {analysis['grade']} ({analysis['grade_category']})")
         print(f"   Score: {analysis['score']:.1f}/100")
         print(f"   Method: Simplified Absolute Grading")

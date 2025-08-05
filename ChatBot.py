@@ -38,7 +38,7 @@ class TradingStatusBot(commands.Bot):
         # Start daily reporting task
         if not self.daily_report.is_running():
             self.daily_report.start()
-            print("⏰ Daily reporting task started (7:00 AM)")
+            print("[TIME] Daily reporting task started (7:00 AM)")
     
     @tasks.loop(time=time(7, 0, tzinfo=pytz.timezone('US/Eastern')))  # 7:00 AM EST
     async def daily_report(self):
@@ -68,7 +68,7 @@ class TradingStatusBot(commands.Bot):
             for section, content in report.items():
                 embed.add_field(name=section, value=content, inline=False)
             
-            embed.set_footer(text="Automated Trading Bot • Daily Report")
+            embed.set_footer(text="Automated Trading Bot - Daily Report")
             
             await channel.send(embed=embed)
             print(f"[SUCCESS] Daily report sent to channel {channel.name}")
@@ -151,16 +151,16 @@ class TradingStatusBot(commands.Bot):
             # Check for low cash
             cash = float(account_info.get('cash', 0))
             if cash < 1000:
-                alerts.append("🔴 Low cash balance")
+                alerts.append("[ALERT] Low cash balance")
             
             # Check for large losses
             day_pl = float(account_info.get('unrealized_pl', 0))
             if day_pl < -500:
-                alerts.append("🔴 Significant daily loss")
+                alerts.append("[ALERT] Significant daily loss")
             
             # Check for account restrictions
             if account_info.get('status') != 'ACTIVE':
-                alerts.append("🔴 Account status issue")
+                alerts.append("[ALERT] Account status issue")
             
         except Exception as e:
             alerts.append(f"[WARNING] Error checking alerts: {str(e)}")

@@ -70,12 +70,12 @@ class SP500ComprehensiveAnalyzer(Market):
                     result = future.result(timeout=240)
                     if result:
                         successful_results.append(result)
-                        print(f"✓ {symbol}: Grade {result['grade']} (Score: {result['score']:.1f})")
+                        print(f"[SUCCESS] {symbol}: Grade {result['grade']} (Score: {result['score']:.1f})")
                     else:
                         failed_symbols.append(symbol)
-                        print(f"✗ {symbol}: failed")
+                        print(f"[ERROR] {symbol}: failed")
                 except Exception as e:
-                    print(f"✗ {symbol}: error - {e}")
+                    print(f"[ERROR] {symbol}: error - {e}")
                     failed_symbols.append(symbol)
         
         print(f"\n[SUCCESS] Analysis Summary:")
@@ -101,14 +101,14 @@ class SP500ComprehensiveAnalyzer(Market):
             result = analyzer.analyze_stock_comprehensive(symbol, show_visualization=False)
             
             if result:
-                print(f"✓ {symbol} completed successfully using {result.get('data_source', 'ML')}")
+                print(f"[SUCCESS] {symbol} completed successfully using {result.get('data_source', 'ML')}")
                 return result
             else:
-                print(f"✗ {symbol} failed")
+                print(f"[ERROR] {symbol} failed")
                 return None
                 
         except Exception as e:
-            print(f"✗ {symbol} error: {e}")
+            print(f"[ERROR] {symbol} error: {e}")
             return None
     
     def _display_results(self, all_results: List[Dict]):
@@ -126,7 +126,7 @@ class SP500ComprehensiveAnalyzer(Market):
         satisfactory_stocks = [r for r in all_results if r['grade'] in ['C+', 'C', 'C-']]
         poor_stocks = [r for r in all_results if r['grade'] in ['D', 'F']]
         
-        print(f"\n🎓 ABSOLUTE GRADE DISTRIBUTION:")
+        print(f"\n[GRADUATION] ABSOLUTE GRADE DISTRIBUTION:")
         print(f"   Excellent (A-grades): {len(excellent_stocks)} stocks ({len(excellent_stocks)/len(all_results)*100:.1f}%)")
         print(f"   Good (B-grades): {len(good_stocks)} stocks ({len(good_stocks)/len(all_results)*100:.1f}%)")
         print(f"   Satisfactory (C-grades): {len(satisfactory_stocks)} stocks ({len(satisfactory_stocks)/len(all_results)*100:.1f}%)")
@@ -142,7 +142,7 @@ class SP500ComprehensiveAnalyzer(Market):
         # Display top performers
         if excellent_stocks:
             print(f"\n{'='*80}")
-            print("🌟 EXCELLENT PERFORMERS (A-GRADES)")
+            print("[STAR] EXCELLENT PERFORMERS (A-GRADES)")
             print(f"{'='*80}")
             print(f"{'Rank':<4} {'Symbol':<8} {'Grade':<3} {'Score':<7} {'Strategy':<20} {'Return':<8}")
             print(f"{'-'*60}")
@@ -165,7 +165,7 @@ class SP500ComprehensiveAnalyzer(Market):
         print(f"MARGINAL/FAIL (D/F-grades): {len(poor_stocks)} stocks - Avoid or short candidates")
         
         if excellent_stocks:
-            print(f"\n🌟 Top 5 ML-Only Performers:")
+            print(f"\n[STAR] Top 5 ML-Only Performers:")
             for i, stock in enumerate(excellent_stocks[:5], 1):
                 strategy_name = stock.get('best_strategy_name', 'Unknown')
                 best_return = stock.get('best_strategy_return', 0) * 100

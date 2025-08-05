@@ -78,7 +78,7 @@ class ConfigurationManager:
                 api_key = os.getenv('ALPACA_API_KEY')
                 secret_key = os.getenv('ALPACA_SECRET_KEY')
             elif choice == "3":
-                print("\n🔐 Manual Credential Entry (Temporary Session Only):")
+                print("\n[SECURE] Manual Credential Entry (Temporary Session Only):")
                 api_key = input("Enter Alpaca API Key: ").strip()
                 secret_key = input("Enter Alpaca Secret Key: ").strip()
             else:
@@ -240,20 +240,20 @@ ENVIRONMENT=development
         
         print("\n[INFO] Method 3: IDE Configuration")
         print("Configure environment variables in your IDE settings:")
-        print("• PyCharm: Run/Debug Configurations → Environment Variables")
-        print("• VS Code: Create launch.json with env settings")
-        print("• Jupyter: Use %env magic commands")
+        print("- PyCharm: Run/Debug Configurations -> Environment Variables")
+        print("- VS Code: Create launch.json with env settings")
+        print("- Jupyter: Use %env magic commands")
         
-        print("\n🔐 Security Best Practices:")
-        print("• Never commit API keys to version control")
-        print("• Add .env to your .gitignore file")
-        print("• Use different keys for development and production")
-        print("• Regularly rotate your API keys")
+        print("\n[SECURITY] Security Best Practices:")
+        print("- Never commit API keys to version control")
+        print("- Add .env to your .gitignore file")
+        print("- Use different keys for development and production")
+        print("- Regularly rotate your API keys")
         
-        print("\n📖 Where to Get API Keys:")
-        print("• Alpaca: https://app.alpaca.markets/paper/dashboard/overview")
-        print("• OpenRouter: https://openrouter.ai/keys")
-        print("• Discord Bot: https://discord.com/developers/applications")
+        print("\n[RESOURCES] Where to Get API Keys:")
+        print("- Alpaca: https://app.alpaca.markets/paper/dashboard/overview")
+        print("- OpenRouter: https://openrouter.ai/keys")
+        print("- Discord Bot: https://discord.com/developers/applications")
         
     def _display_config_value(self, key: str, value: str) -> str:
         """Display configuration value with first 4 and last 4 characters visible"""
@@ -410,7 +410,7 @@ ENVIRONMENT=development
 
 
 def save_analysis_to_preferences(result: dict, rank: int = 1):
-    """✅ UPDATED: Helper function with enhanced grading support"""
+    """[SUCCESS] UPDATED: Helper function with enhanced grading support"""
     try:
         # Extract stability metrics
         prediction_winner = result.get('prediction_winner', 'GBM')
@@ -429,7 +429,7 @@ def save_analysis_to_preferences(result: dict, rank: int = 1):
         avg_total_return = (gbm_stability.get('total_return', 0) + ml_stability.get('total_return', 0)) / 2
         avg_sharpe = (gbm_stability.get('sharpe_ratio', 0) + ml_stability.get('sharpe_ratio', 0)) / 2
         
-        # ✅ UPDATED: Extract GenAI information
+        # [SUCCESS] UPDATED: Extract GenAI information
         grade_info = result.get('grade_info', {})
         genai_score = grade_info.get('genai_score', None) if isinstance(grade_info, dict) else None
         grading_method = result.get('grading_method', 'traditional')
@@ -481,30 +481,30 @@ def save_analysis_to_preferences(result: dict, rank: int = 1):
         
         success = UserPreferenceManager.save_user_preference(preference_data)
         if success:
-            print(f"✅ {result['symbol']} saved to user preferences!")
+            print(f"[SUCCESS] {result['symbol']} saved to user preferences!")
             print(f"   Grade: {preference_data['grade']} | Score: {preference_data['score']:.1f}")
             print(f"   AUC: {preference_data['avg_auc']:.2f} | Slope: {preference_data['avg_slope']:.6f}")
             print(f"   Total Return: {preference_data['avg_total_return']:.4f}")
-            print(f"   🤖 GenAI Score: {preference_data['genai_score']:.3f}" if preference_data['genai_available'] else "   🤖 GenAI: Not Available")
-            print(f"   📊 Grading Method: {preference_data['grading_method']}")
+            print(f"   [AI] GenAI Score: {preference_data['genai_score']:.3f}" if preference_data['genai_available'] else "   [AI] GenAI: Not Available")
+            print(f"   [CHART] Grading Method: {preference_data['grading_method']}")
             print(f"   Best Strategy: {preference_data['best_strategy']}")
             print(f"   Trading: {'Allowed' if preference_data['trading_allowed'] else 'Denied (default)'}")
         else:
-            print(f"❌ Failed to save {result['symbol']} to user preferences")
+            print(f"[ERROR] Failed to save {result['symbol']} to user preferences")
         
         return success
         
     except Exception as e:
-        print(f"❌ Error saving {result['symbol']} to preferences: {str(e)}")
-        print(f"🔍 Available keys in result: {list(result.keys())}")  # Debug info
+        print(f"[ERROR] Error saving {result['symbol']} to preferences: {str(e)}")
+        print(f"[DEBUG] Available keys in result: {list(result.keys())}")  # Debug info
         return False
 
 def check_genai_availability(config_manager):
-    """✅ UPDATED: Check if GenAI functionality is available"""
+    """[SUCCESS] UPDATED: Check if GenAI functionality is available"""
     
     if not config_manager.is_genai_available():
-        print("⚠️  OpenRouter API key not found in environment variables")
-        print("💡 To enable GenAI features:")
+        print("[WARNING] OpenRouter API key not found in environment variables")
+        print("[TIP] To enable GenAI features:")
         print("   1. Get an API key from https://openrouter.ai/keys")
         print("   2. Set OPENROUTER_API_KEY environment variable")
         print("   3. Or add it to your .env file")
@@ -516,7 +516,7 @@ def check_genai_availability(config_manager):
         test_grader = EnhancedGradingWithGenAI(api_key)
         return test_grader.genai_evaluator.genesis_instance is not None
     except Exception as e:
-        print(f"⚠️  GenAI functionality test failed: {e}")
+        print(f"[WARNING] GenAI functionality test failed: {e}")
         return False
 
 def main():
@@ -529,42 +529,42 @@ def main():
     # ✅ Initialize configuration manager
     config = ConfigurationManager()
     
-    print("🔧 ENHANCED FEATURES:")
-    print("✅ Environment variable configuration management")
-    print("✅ Secure credential storage with .env file support")
-    print("✅ yfinance primary data source with Alpaca fallback")
-    print("✅ Enhanced XGBoost model with optimized parameters")
-    print("✅ Comprehensive strategy testing")
-    print("✅ GenAI-enhanced grading system")
-    print("✅ Discord bot integration")
-    print("✅ User preference management with trading bot integration")
-    print("✅ Enhanced visualizations with colored grade backgrounds")
+    print("[FEATURES] ENHANCED FEATURES:")
+    print("[SUCCESS] Environment variable configuration management")
+    print("[SUCCESS] Secure credential storage with .env file support")
+    print("[SUCCESS] yfinance primary data source with Alpaca fallback")
+    print("[SUCCESS] Enhanced XGBoost model with optimized parameters")
+    print("[SUCCESS] Comprehensive strategy testing")
+    print("[SUCCESS] GenAI-enhanced grading system")
+    print("[SUCCESS] Discord bot integration")
+    print("[SUCCESS] User preference management with trading bot integration")
+    print("[SUCCESS] Enhanced visualizations with colored grade backgrounds")
     
-    # ✅ Show configuration status
-    print(f"\n🔍 CONFIGURATION STATUS:")
-    print(f"   Alpaca API: {'✅ Configured' if config.config['alpaca_api_key'] else '❌ Not configured'}")
-    print(f"   GenAI (OpenRouter): {'✅ Available' if config.is_genai_available() else '❌ Not configured'}")
-    print(f"   Discord Bot: {'✅ Available' if config.is_discord_available() else '❌ Not configured'}")
+    # Show configuration status
+    print(f"\n[CONFIG] CONFIGURATION STATUS:")
+    print(f"   Alpaca API: {'[SUCCESS] Configured' if config.config['alpaca_api_key'] else '[ERROR] Not configured'}")
+    print(f"   GenAI (OpenRouter): {'[SUCCESS] Available' if config.is_genai_available() else '[ERROR] Not configured'}")
+    print(f"   Discord Bot: {'[SUCCESS] Available' if config.is_discord_available() else '[ERROR] Not configured'}")
     print(f"   Environment: {config.config['environment']}")
     
     print("\nChoose operation:")
-    print("1. 📈 COMPREHENSIVE SINGLE STOCK ANALYSIS (Enhanced with yfinance)")
-    print("2. 📊 MULTIPLE STOCKS COMPREHENSIVE TESTING (Enhanced)")
-    print("3. 🏆 S&P 500 comprehensive analysis with GenAI grading")
-    print("4. 🤖 AUTOMATED TRADING LOOP")
-    print("5. 📋 VIEW ACCOUNT HOLDINGS")
-    print("6. 💾 MANAGE USER PREFERENCES")
-    print("7. 🔧 CONFIGURATION MANAGEMENT")
-    print("8. 🤖 START DISCORD BOT")
+    print("1. [CHART] COMPREHENSIVE SINGLE STOCK ANALYSIS (Enhanced with yfinance)")
+    print("2. [CHART] MULTIPLE STOCKS COMPREHENSIVE TESTING (Enhanced)")
+    print("3. [TROPHY] S&P 500 comprehensive analysis with GenAI grading")
+    print("4. [BOT] AUTOMATED TRADING LOOP")
+    print("5. [LIST] VIEW ACCOUNT HOLDINGS")
+    print("6. [SAVE] MANAGE USER PREFERENCES")
+    print("7. [CONFIG] CONFIGURATION MANAGEMENT")
+    print("8. [BOT] START DISCORD BOT")
     
     choice = input("Enter choice (1-8): ")
     
     if choice == "7":
-        # ✅ NEW: Configuration management
-        print("\n🔧 CONFIGURATION MANAGEMENT")
+        # NEW: Configuration management
+        print("\n[CONFIG] CONFIGURATION MANAGEMENT")
         print("="*50)
         
-        # ✅ FIXED CODE (using the new method):
+        # FIXED CODE (using the new method):
         print("Current Configuration:")
         for key, value in config.config.items():
             display_value = config._display_config_value(key, value)
@@ -597,18 +597,18 @@ def main():
                 try:
                     test_bot = TradingBot(None, api_key=api_key, secret_key=secret_key, paper=True)
                     account = test_bot.get_account_info()
-                    print("✅ Alpaca connection successful!")
+                    print("[SUCCESS] Alpaca connection successful!")
                     print(f"   Account status: {account.get('status', 'Unknown')}")
                 except Exception as e:
-                    print(f"❌ Alpaca connection failed: {e}")
+                    print(f"[ERROR] Alpaca connection failed: {e}")
             
             if config.is_genai_available():
                 genai_available = check_genai_availability(config)
-                print(f"{'✅' if genai_available else '❌'} GenAI connection: {'Working' if genai_available else 'Failed'}")
+                print(f"{'[SUCCESS]' if genai_available else '[ERROR]'} GenAI connection: {'Working' if genai_available else 'Failed'}")
         elif config_choice == "3":
             config._show_env_setup_instructions()
         elif config_choice == "4":
-            print("\n📋 Configuration Validation:")
+            print("\n[LIST] Configuration Validation:")
             issues = []
             
             if not config.config['alpaca_api_key']:
@@ -621,24 +621,24 @@ def main():
                 issues.append("Discord bot disabled (missing token/channel)")
             
             if issues:
-                print("⚠️  Configuration Issues:")
+                print("[WARNING] Configuration Issues:")
                 for issue in issues:
-                    print(f"   • {issue}")
+                    print(f"   - {issue}")
             else:
-                print("✅ All configurations are properly set!")
+                print("[SUCCESS] All configurations are properly set!")
         
         return
     
     elif choice == "8":
-        # ✅ FIXED: Discord bot with proper asyncio handling
+        # FIXED: Discord bot with proper asyncio handling
         if not config.is_discord_available():
-            print("❌ Discord bot not configured")
-            print("💡 Set DISCORD_BOT_TOKEN and DISCORD_CHANNEL_ID to enable Discord features")
+            print("[ERROR] Discord bot not configured")
+            print("[TIP] Set DISCORD_BOT_TOKEN and DISCORD_CHANNEL_ID to enable Discord features")
             return
         
-        print("🤖 Starting Discord bot...")
-        print("⏰ Bot will send daily reports at 7:00 AM EST")
-        print("💡 Note: Close this program to stop the bot")
+        print("[BOT] Starting Discord bot...")
+        print("[TIME] Bot will send daily reports at 7:00 AM EST")
+        print("[TIP] Note: Close this program to stop the bot")
         
         try:
             # Check if we're in an existing event loop (like Jupyter)
@@ -646,8 +646,8 @@ def main():
             try:
                 # This will raise RuntimeError if no event loop is running
                 asyncio.get_running_loop()
-                print("⚠️  Detected existing event loop (like Jupyter)")
-                print("🔧 Please run the Discord bot in a separate Python script:")
+                print("[WARNING] Detected existing event loop (like Jupyter)")
+                print("[CONFIG] Please run the Discord bot in a separate Python script:")
                 print("```python")
                 print("from ChatBot import run_discord_bot")
                 print("run_discord_bot()")
@@ -657,33 +657,33 @@ def main():
                 from ChatBot import run_discord_bot
                 run_discord_bot()
         except ImportError:
-            print("❌ ChatBot module not found. Please ensure ChatBot.py is in your project directory.")
+            print("[ERROR] ChatBot module not found. Please ensure ChatBot.py is in your project directory.")
         except Exception as e:
-            print(f"❌ Error starting Discord bot: {e}")
-            print("💡 Try running the Discord bot in a separate terminal/script")
+            print(f"[ERROR] Error starting Discord bot: {e}")
+            print("[TIP] Try running the Discord bot in a separate terminal/script")
         return
 
     
-    # ✅ Get API credentials for trading operations
+    # Get API credentials for trading operations
     api_key, secret_key = config.get_alpaca_credentials()
     
     if not api_key or not secret_key:
-        print("❌ Cannot proceed without Alpaca API credentials")
-        print("💡 Use option 7 (Configuration Management) to set up your credentials")
+        print("[ERROR] Cannot proceed without Alpaca API credentials")
+        print("[TIP] Use option 7 (Configuration Management) to set up your credentials")
         return
     
     # Rest of the main function logic remains the same, but uses config-managed credentials
     if choice == "6":
         # User preference management [unchanged - just uses the credentials from config]
-        print("\n💾 USER PREFERENCE MANAGEMENT")
+        print("\n[SAVE] USER PREFERENCE MANAGEMENT")
         print("="*50)
         
         user_prefs = UserPreferenceManager.load_user_preferences()
         if user_prefs.empty:
-            print("📝 No user preferences found.")
-            print("💡 Tip: Analyze stocks using options 1-3 to build your preference list!")
+            print("[NOTE] No user preferences found.")
+            print("[TIP] Tip: Analyze stocks using options 1-3 to build your preference list!")
         else:
-            print(f"📋 Found {len(user_prefs)} stocks in your preferences:")
+            print(f"[LIST] Found {len(user_prefs)} stocks in your preferences:")
             print(f"{'Symbol':<8} {'Grade':<5} {'Score':<7} {'AUC':<8} {'Slope':<10} {'Trading':<10} {'Best Strategy':<20}")
             print("-" * 85)
             
@@ -692,7 +692,7 @@ def main():
                 if isinstance(trading_allowed, str):
                     trading_allowed = trading_allowed.lower() in ['true', '1', 'yes', 'allowed']
                 
-                trading_status = "✅ Allowed" if trading_allowed else "❌ Denied"
+                trading_status = "[SUCCESS] Allowed" if trading_allowed else "[ERROR] Denied"
                 strategy = stock.get('best_strategy', 'N/A')[:19]
                 
                 auc_val = stock.get('avg_auc', stock.get('gbm_auc', 0))
@@ -721,15 +721,15 @@ def main():
                         
                         new_status = not current_status
                         
-                        print(f"\n📊 Current status for {symbol}: {'Allowed' if current_status else 'Denied'}")
-                        print(f"🔄 New status will be: {'Allowed' if new_status else 'Denied'}")
+                        print(f"\n[CHART] Current status for {symbol}: {'Allowed' if current_status else 'Denied'}")
+                        print(f"[CHANGE] New status will be: {'Allowed' if new_status else 'Denied'}")
                         
                         confirm = input("Confirm change? (y/n): ").lower()
                         if confirm == 'y':
                             success = UserPreferenceManager.update_trading_permission(symbol, new_status)
                             
                             if success:
-                                print(f"✅ Trading permission for {symbol} updated successfully!")
+                                print(f"[SUCCESS] Trading permission for {symbol} updated successfully!")
                                 user_prefs = UserPreferenceManager.load_user_preferences()
                                 updated_row = user_prefs[user_prefs['symbol'] == symbol]
                                 updated_status = updated_row['trading_allowed'].iloc[0]
@@ -739,36 +739,36 @@ def main():
                                 else:
                                     updated_status = bool(updated_status)
                                 
-                                print(f"📊 Verified new status: {'✅ Allowed' if updated_status else '❌ Denied'}")
+                                print(f"[CHART] Verified new status: {'[SUCCESS] Allowed' if updated_status else '[ERROR] Denied'}")
                             else:
-                                print(f"❌ Failed to update trading permission for {symbol}")
+                                print(f"[ERROR] Failed to update trading permission for {symbol}")
                         else:
-                            print("❌ Change cancelled")
+                            print("[ERROR] Change cancelled")
                     else:
-                        print(f"❌ {symbol} not found in user preferences")
+                        print(f"[ERROR] {symbol} not found in user preferences")
     
     elif choice == "5":
         # View account holdings
-        print("\n📊 DISPLAYING ACCOUNT HOLDINGS...")
+        print("\n[CHART] DISPLAYING ACCOUNT HOLDINGS...")
         trading_bot = TradingBot(None, api_key=api_key, secret_key=secret_key, paper=True)
         trading_bot.display_all_holdings()
     elif choice == "4":
-        print("\n🤖 AUTOMATED TRADING LOOP OPTIONS:")
+        print("\n[BOT] AUTOMATED TRADING LOOP OPTIONS:")
         print("1. Paper Trading (Recommended for testing)")
-        print("2. Live Trading (⚠️  Real money!)")
+        print("2. Live Trading ([WARNING] Real money!)")
         
         trading_choice = input("Enter choice (1 or 2): ")
         paper_trading = trading_choice != "2"
         
         if not paper_trading:
-            confirm = input("⚠️  WARNING: This is LIVE TRADING with real money! Type 'CONFIRM' to proceed: ")
+            confirm = input("[WARNING] WARNING: This is LIVE TRADING with real money! Type 'CONFIRM' to proceed: ")
             if confirm != "CONFIRM":
-                print("❌ Live trading cancelled")
+                print("[ERROR] Live trading cancelled")
                 return
         
-        print(f"\n🚀 Starting Automated Trading Loop...")
-        print(f"💰 Paper Trading: {paper_trading}")
-        print(f"📊 Using user preferences for trading decisions")
+        print(f"\n[ROCKET] Starting Automated Trading Loop...")
+        print(f"[MONEY] Paper Trading: {paper_trading}")
+        print(f"[CHART] Using user preferences for trading decisions")
         
         auto_trader = AutomatedTradingSystemLoop(api_key, secret_key, paper_trading)
         auto_trader.start_automated_trading()
@@ -778,36 +778,36 @@ def main():
         print("1. Quick test (10 stocks) - 5-8 minutes")
         print("2. Sample analysis (50 stocks) - 20-40 minutes")  
         print("3. Full analysis (all ~500 stocks) - 3-6 hours")
-        print(f"\n🤖 GenAI Enhancement: {'✅ Available' if config.is_genai_available() else '❌ Disabled'}")
+        print(f"\n[BOT] GenAI Enhancement: {'[SUCCESS] Available' if config.is_genai_available() else '[ERROR] Disabled'}")
         
         sub_choice = input("Enter choice (1, 2, or 3): ")
         
         analyzer = SP500ComprehensiveAnalyzer(api_key, secret_key)
         
         if sub_choice == "3":
-            print("🚀 Starting full S&P 500 analysis...")
-            print("⏱️  Estimated time: 3-6 hours")
+            print("[ROCKET] Starting full S&P 500 analysis...")
+            print("[TIME] Estimated time: 3-6 hours")
             analyzer.run_comprehensive_analysis(max_workers=25)
         elif sub_choice == "2":
-            print("🚀 Starting sample S&P 500 analysis (50 stocks)...")
-            print("⏱️  Estimated time: 20-40 minutes")
+            print("[ROCKET] Starting sample S&P 500 analysis (50 stocks)...")
+            print("[TIME] Estimated time: 20-40 minutes")
             analyzer.run_comprehensive_analysis(max_workers=8, sample_size=50)
         else:
-            print("🚀 Starting quick S&P 500 test (10 stocks)...")
-            print("⏱️  Estimated time: 5-8 minutes")
+            print("[ROCKET] Starting quick S&P 500 test (10 stocks)...")
+            print("[TIME] Estimated time: 5-8 minutes")
             analyzer.run_comprehensive_analysis(max_workers=5, sample_size=10)
     
     elif choice == "2":
         # Multiple stocks comprehensive testing
-        print("\n📊 MULTIPLE STOCKS COMPREHENSIVE TESTING (Enhanced)")
+        print("\n[CHART] MULTIPLE STOCKS COMPREHENSIVE TESTING (Enhanced)")
         print("="*60)
-        print("🔧 Features:")
-        print("  • Environment-based configuration")
-        print("  • yfinance primary data source with maximum historical data")
-        print("  • Enhanced XGBoost predictions with optimized parameters")
-        print("  • Comprehensive strategy testing with parameter display")
-        print("  • Relative grading vs S&P 500 benchmark")
-        print(f"  • GenAI enhancement: {'✅ Available' if config.is_genai_available() else '❌ Disabled'}")
+        print("[CONFIG] Features:")
+        print("  - Environment-based configuration")
+        print("  - yfinance primary data source with maximum historical data")
+        print("  - Enhanced XGBoost predictions with optimized parameters")
+        print("  - Comprehensive strategy testing with parameter display")
+        print("  - Relative grading vs S&P 500 benchmark")
+        print(f"  - GenAI enhancement: {'[SUCCESS] Available' if config.is_genai_available() else '[ERROR] Disabled'}")
         
         symbols_input = input("\nEnter stock symbols (comma-separated) or press Enter for default set [AAPL,NVDA,TSLA,MSFT,GOOGL]: ").strip()
         
@@ -821,7 +821,7 @@ def main():
         
         analyzer = ComprehensiveStockAnalyzer(api_key, secret_key)
         
-        print(f"\n🚀 Starting analysis of {len(symbols)} stocks...")
+        print(f"\n[ROCKET] Starting analysis of {len(symbols)} stocks...")
         successful_analyses = []
         failed_analyses = []
         saved_count = 0
@@ -833,7 +833,7 @@ def main():
                 result = analyzer.analyze_stock_comprehensive(symbol, show_visualization=show_viz)
                 
                 if result:
-                    print(f"✅ {symbol} analysis completed successfully")
+                    print(f"[SUCCESS] {symbol} analysis completed successfully")
                     print(f"   Data Source: {result.get('data_source', 'unknown')}")
                     print(f"   Grade: {result.get('grade', 'N/A')} (Score: {result.get('score', 0):.1f})")
                     print(f"   Best Strategy: {result.get('best_strategy_name', 'N/A')}")
@@ -848,27 +848,27 @@ def main():
                         if save_analysis_to_preferences(result, rank=i):
                             saved_count += 1
                 else:
-                    print(f"❌ {symbol} analysis failed")
+                    print(f"[ERROR] {symbol} analysis failed")
                     failed_analyses.append(symbol)
                     
             except Exception as e:
-                print(f"❌ {symbol} analysis error: {str(e)}")
+                print(f"[ERROR] {symbol} analysis error: {str(e)}")
                 failed_analyses.append(symbol)
             
             if i < len(symbols):
-                print("⏱️  Waiting 3 seconds before next analysis...")
+                print("[TIME] Waiting 3 seconds before next analysis...")
                 time.sleep(3)
         
         # Summary of results
         print(f"\n{'='*60}")
         print("MULTIPLE STOCKS ANALYSIS SUMMARY")
         print(f"{'='*60}")
-        print(f"✅ Successful: {len(successful_analyses)} stocks")
-        print(f"❌ Failed: {len(failed_analyses)} stocks")
-        print(f"💾 Saved to preferences: {saved_count} stocks")
+        print(f"[SUCCESS] Successful: {len(successful_analyses)} stocks")
+        print(f"[ERROR] Failed: {len(failed_analyses)} stocks")
+        print(f"[SAVE] Saved to preferences: {saved_count} stocks")
         
         if successful_analyses:
-            print(f"\n📊 RESULTS RANKED BY SCORE:")
+            print(f"\n[CHART] RESULTS RANKED BY SCORE:")
             successful_analyses.sort(key=lambda x: x.get('score', 0), reverse=True)
             
             print(f"{'Rank':<4} {'Symbol':<8} {'Grade':<5} {'Score':<7} {'Data Source':<12} {'Best Strategy':<20}")
@@ -880,32 +880,32 @@ def main():
                       f"{result.get('best_strategy_name', 'N/A')[:19]:<20}")
         
         if failed_analyses:
-            print(f"\n❌ Failed analyses: {', '.join(failed_analyses)}")
+            print(f"\n[ERROR] Failed analyses: {', '.join(failed_analyses)}")
         
         if saved_count > 0:
-            print(f"\n💾 {saved_count} stocks saved to UserPreferenceStock.csv")
+            print(f"\n[SAVE] {saved_count} stocks saved to UserPreferenceStock.csv")
             print("   Use option 6 to view and manage your preferences")
             print("   Use option 4 for automated trading with your preferences")
     
     elif choice == "1":
         # Single stock comprehensive analysis
-        print("\n📈 COMPREHENSIVE SINGLE STOCK ANALYSIS (Enhanced)")
+        print("\n[CHART] COMPREHENSIVE SINGLE STOCK ANALYSIS (Enhanced)")
         print("="*60)
-        print("🔧 Enhanced Features:")
+        print("[CONFIG] Enhanced Features:")
         print("  • Environment-based secure configuration")
         print("  • yfinance primary data source (maximum historical data)")
         print("  • Alpaca fallback if yfinance fails")
         print("  • Enhanced XGBoost model with optimized parameters")
         print("  • Relative grading vs S&P 500 benchmark")
-        print(f"  • GenAI enhancement: {'✅ Available' if config.is_genai_available() else '❌ Disabled'}")
+        print(f"  • GenAI enhancement: {'[SUCCESS] Available' if config.is_genai_available() else '[ERROR] Disabled'}")
         print("  • Enhanced visualization with colored grade backgrounds")
         print("  • Save to user preferences for automated trading")
         
         symbol = input("\nEnter stock symbol (default: AAPL): ").upper() or 'AAPL'
         show_viz = input("Show comprehensive analysis visualization? (y/n) [y]: ").lower() != 'n'
         
-        print(f"\n🚀 Starting comprehensive analysis for {symbol}...")
-        print("📊 This may take 1-2 minutes depending on data availability...")
+        print(f"\n[ROCKET] Starting comprehensive analysis for {symbol}...")
+        print("[CHART] This may take 1-2 minutes depending on data availability...")
         
         analyzer = ComprehensiveStockAnalyzer(api_key, secret_key)
         
@@ -913,46 +913,46 @@ def main():
             result = analyzer.analyze_stock_comprehensive(symbol, show_visualization=show_viz)
             
             if result:
-                print(f"\n✅ Comprehensive analysis for {symbol} completed successfully!")
-                print(f"📊 Data Source Used: {result.get('data_source', 'unknown')}")
-                print(f"🎯 Final Grade: {result.get('grade', 'N/A')} (Score: {result.get('score', 0):.1f}/100)")
-                print(f"⚔️  Best Strategy: {result.get('best_strategy_name', 'N/A')}")
-                print(f"📊 Grading Method: {result.get('grading_method', 'relative')}")
+                print(f"\n[SUCCESS] Comprehensive analysis for {symbol} completed successfully!")
+                print(f"[CHART] Data Source Used: {result.get('data_source', 'unknown')}")
+                print(f"[TARGET] Final Grade: {result.get('grade', 'N/A')} (Score: {result.get('score', 0):.1f}/100)")
+                print(f"[STRATEGY] Best Strategy: {result.get('best_strategy_name', 'N/A')}")
+                print(f"[CHART] Grading Method: {result.get('grading_method', 'relative')}")
                 
                 if show_viz:
-                    print(f"📊 Check the generated visualization: {symbol}_comprehensive_analysis.png")
+                    print(f"[CHART] Check the generated visualization: {symbol}_comprehensive_analysis.png")
                 
                 save_choice = input(f"\nSave {symbol} to user preferences? (y/n): ").lower()
                 if save_choice == 'y':
-                    print(f"\n💾 Saving {symbol} to user preferences...")
+                    print(f"\n[SAVE] Saving {symbol} to user preferences...")
                     success = save_analysis_to_preferences(result, rank=1)
                     
                     if success:
-                        print("\n🎉 Analysis saved successfully!")
-                        print("💡 Next steps:")
+                        print("\n[CELEBRATION] Analysis saved successfully!")
+                        print("[TIP] Next steps:")
                         print("   • Use option 6 to view and manage your preferences")
                         print("   • Use option 4 for automated trading with your saved preferences")
                         print("   • Modify trading permissions in option 6 if needed")
                     else:
-                        print("❌ Failed to save analysis to preferences")
+                        print("[ERROR] Failed to save analysis to preferences")
                 else:
-                    print("📝 Analysis not saved to preferences")
+                    print("[NOTE] Analysis not saved to preferences")
                     
             else:
-                print(f"❌ Failed to analyze {symbol}")
-                print("💡 Tips:")
+                print(f"[ERROR] Failed to analyze {symbol}")
+                print("[TIP] Tips:")
                 print("  • Check if the symbol is correct")
                 print("  • Try a different stock symbol")
                 print("  • Check your internet connection")
                 
         except Exception as e:
-            print(f"❌ Error analyzing {symbol}: {str(e)}")
-            print("💡 This might be due to:")
+            print(f"[ERROR] Error analyzing {symbol}: {str(e)}")
+            print("[TIP] This might be due to:")
             print("  • Invalid stock symbol")
             print("  • Network connectivity issues")
             print("  • API rate limiting")
     else:
-        print("❌ Unexpected input, please read the instruction before you input.")
+        print("[ERROR] Unexpected input, please read the instruction before you input.")
 
 def display_startup_info():
     """✅ ENHANCED: Display startup information with configuration status"""
@@ -966,40 +966,40 @@ def display_startup_info():
     except:
         alpaca_configured = genai_configured = discord_configured = False
     
-    print("\n🔍 ENHANCED TECHNICAL DETAILS:")
-    print("  • Configuration: Environment variables with .env file support")
-    print("  • Security: Encrypted credential storage and validation")
-    print("  • Market class: COMP2012 pattern with GBM simulation")
-    print("  • StockPredictor: yfinance → Alpaca fallback data sourcing")
-    print("  • Analysis classes: Inherit from Market base class")
-    print("  • XGBoost: Enhanced parameters for better predictions")
-    print("  • Strategies: Mean Reversion, Trend Following, Weighted Trend Following")
-    print("  • Grading: Relative vs S&P 500 with strict percentile distribution")
-    print("  • GenAI: OpenRouter integration for enhanced scoring")
-    print("  • Visualization: Enhanced charts with colored grade backgrounds")
-    print("  • Discord: Automated daily account status reporting")
+    print("\n[SEARCH] ENHANCED TECHNICAL DETAILS:")
+    print("  - Configuration: Environment variables with .env file support")
+    print("  - Security: Encrypted credential storage and validation")
+    print("  - Market class: COMP2012 pattern with GBM simulation")
+    print("  - StockPredictor: yfinance -> Alpaca fallback data sourcing")
+    print("  - Analysis classes: Inherit from Market base class")
+    print("  - XGBoost: Enhanced parameters for better predictions")
+    print("  - Strategies: Mean Reversion, Trend Following, Weighted Trend Following")
+    print("  - Grading: Relative vs S&P 500 with strict percentile distribution")
+    print("  - GenAI: OpenRouter integration for enhanced scoring")
+    print("  - Visualization: Enhanced charts with colored grade backgrounds")
+    print("  - Discord: Automated daily account status reporting")
     
-    print("\n📋 ENHANCED FILE STRUCTURE:")
-    print("  • PA2.py: Main program with configuration management")
-    print("  • Market.py: Market, StockPredictor (core classes)")
-    print("  • Analysis.py: All analysis classes inheriting from Market")
-    print("  • GradingSystem.py: Traditional + GenAI grading systems")
-    print("  • TradingBot.py: Trading strategies and automation")
-    print("  • ChatBot.py: Discord bot for daily reporting")
-    print("  • .env: Secure credential storage (create this file)")
-    print("  • UserPreferenceStock.csv: Saved stock analyses")
+    print("\n[LIST] ENHANCED FILE STRUCTURE:")
+    print("  - PA2.py: Main program with configuration management")
+    print("  - Market.py: Market, StockPredictor (core classes)")
+    print("  - Analysis.py: All analysis classes inheriting from Market")
+    print("  - GradingSystem.py: Traditional + GenAI grading systems")
+    print("  - TradingBot.py: Trading strategies and automation")
+    print("  - ChatBot.py: Discord bot for daily reporting")
+    print("  - .env: Secure credential storage (create this file)")
+    print("  - UserPreferenceStock.csv: Saved stock analyses")
     
-    print(f"\n⚙️  CONFIGURATION STATUS:")
-    print(f"  • Alpaca Trading: {'✅ Configured' if alpaca_configured else '❌ Setup needed'}")
-    print(f"  • GenAI Features: {'✅ Available' if genai_configured else '❌ Setup needed'}")
-    print(f"  • Discord Bot: {'✅ Available' if discord_configured else '❌ Setup needed'}")
+    print(f"\n[SETTINGS] CONFIGURATION STATUS:")
+    print(f"  - Alpaca Trading: {'[SUCCESS] Configured' if alpaca_configured else '[ERROR] Setup needed'}")
+    print(f"  - GenAI Features: {'[SUCCESS] Available' if genai_configured else '[ERROR] Setup needed'}")
+    print(f"  - Discord Bot: {'[SUCCESS] Available' if discord_configured else '[ERROR] Setup needed'}")
     
     if not (alpaca_configured and genai_configured):
-        print(f"\n💡 QUICK SETUP:")
-        print(f"  • Run the program and choose option 7 (Configuration Management)")
-        print(f"  • Or create a .env file with your API keys")
-        print(f"  • Get Alpaca keys: https://app.alpaca.markets/paper/dashboard/overview")
-        print(f"  • Get OpenRouter key: https://openrouter.ai/keys")
+        print(f"\n[TIP] QUICK SETUP:")
+        print(f"  - Run the program and choose option 7 (Configuration Management)")
+        print(f"  - Or create a .env file with your API keys")
+        print(f"  - Get Alpaca keys: https://app.alpaca.markets/paper/dashboard/overview")
+        print(f"  - Get OpenRouter key: https://openrouter.ai/keys")
 
 if __name__ == "__main__":
     display_startup_info()

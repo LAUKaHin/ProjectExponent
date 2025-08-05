@@ -439,7 +439,7 @@ class UserPreferenceManager(Market):
             # Add new row
             df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
             df.to_csv(filename, index=False)
-            print(f"💾 Saved {new_row['symbol']} to user preferences")
+            print(f"[SAVE] Saved {new_row['symbol']} to user preferences")
             return True
             
         except Exception as e:
