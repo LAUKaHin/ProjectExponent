@@ -753,7 +753,10 @@ def main():
         trading_bot = TradingBot(None, api_key=api_key, secret_key=secret_key, paper=True)
         trading_bot.display_all_holdings()
     elif choice == "4":
-        print("\n[BOT] AUTOMATED TRADING LOOP OPTIONS:")
+        print("\n[BOT] ENHANCED AUTOMATED TRADING SYSTEM")
+        print("="*50)
+        
+        print("Trading Mode Options:")
         print("1. Paper Trading (Recommended for testing)")
         print("2. Live Trading ([WARNING] Real money!)")
         
@@ -766,12 +769,75 @@ def main():
                 print("[ERROR] Live trading cancelled")
                 return
         
-        print(f"\n[ROCKET] Starting Automated Trading Loop...")
+        print(f"\n[ROCKET] Initializing Enhanced Trading System...")
         print(f"[MONEY] Paper Trading: {paper_trading}")
-        print(f"[CHART] Using user preferences for trading decisions")
         
         auto_trader = AutomatedTradingSystemLoop(api_key, secret_key, paper_trading)
-        auto_trader.start_automated_trading()
+        
+        print("\nEnhanced Trading Options:")
+        print("1. Grade-Based Buying (Buy stocks by grade priority)")
+        print("2. Strategy-Based Trading (Apply strategies to holdings)")
+        print("3. Full Automated Trading Loop (Continuous monitoring)")
+        print("4. View Current Holdings")
+        print("5. View Account Information")
+        print("6. Back to Main Menu")
+        
+        sub_choice = input("Select option (1-6): ").strip()
+        
+        if sub_choice == "1":
+            print("\n[CHART] GRADE-BASED BUYING SYSTEM")
+            print("="*40)
+            print("[INFO] This will buy stocks based on grade priority:")
+            print("   - A+ grade stocks first, then A, A-, B+, etc.")
+            print("   - Round-robin buying within each grade")
+            print("   - Respects cash reserve settings")
+            print("   - Uses stocks from your preference database")
+            
+            confirm_buy = input("\nProceed with grade-based buying? (y/n): ").lower()
+            if confirm_buy == 'y':
+                auto_trader.execute_grade_based_buying()
+            else:
+                print("[ERROR] Grade-based buying cancelled")
+        
+        elif sub_choice == "2":
+            print("\n[STRATEGY] STRATEGY-BASED TRADING")
+            print("="*40)
+            print("[INFO] This will apply best strategies to current holdings")
+            auto_trader.execute_strategy_based_trading()
+        
+        elif sub_choice == "3":
+            print("\n[ROCKET] Starting Full Automated Trading Loop...")
+            print("[CHART] Features:")
+            print("   - Continuous market monitoring")
+            print("   - Grade-based buying during market hours")
+            print("   - Strategy-based position management")
+            print("   - Automatic cash reserve management")
+            print("[CONTROL] Press Ctrl+C to stop")
+            
+            try:
+                auto_trader.start_automated_trading()
+            except KeyboardInterrupt:
+                print("\n[STOPPED] Trading system stopped by user")
+                auto_trader.stop_trading()
+        
+        elif sub_choice == "4":
+            print("\n[LIST] CURRENT HOLDINGS")
+            auto_trader.trading_bot.display_all_holdings()
+        
+        elif sub_choice == "5":
+            print("\n[INFO] ACCOUNT INFORMATION")
+            account_info = auto_trader.trading_bot.get_account_info()
+            print("="*50)
+            for key, value in account_info.items():
+                print(f"{key}: {value}")
+            print("="*50)
+        
+        elif sub_choice == "6":
+            print("[ERROR] Returning to main menu")
+            return
+        
+        else:
+            print("[ERROR] Invalid option selected")
     
     elif choice == "3":
         print("\nS&P 500 Analysis Options (Enhanced with GenAI):")

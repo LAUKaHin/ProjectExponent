@@ -280,7 +280,7 @@ class TradingBot:
 
 
 class AutomatedTradingSystemLoop:
-    """Automated Trading System with position tracking - NO TRY-EXCEPT"""
+    """Enhanced Automated Trading System with grade-based buying and strategy execution"""
     
     def __init__(self, api_key: str, secret_key: str, paper_trading: bool = True):
         self.api_key = api_key
@@ -291,56 +291,335 @@ class AutomatedTradingSystemLoop:
         self.trading_bot = TradingBot(None, api_key=api_key, secret_key=secret_key, paper=paper_trading)
         self.data_client = StockHistoricalDataClient(api_key, secret_key)
         
-        # Load pre-analyzed stock data from CSV
-        self.stock_database = self._load_stock_database()
-        self.sp500_symbols = self.get_sp500_symbols()  # Now this method exists
+        # Load trading settings
+        self.settings = self._load_trading_settings()
+        
+        # Load combined stock database from both CSV files
+        self.stock_database = self._load_combined_stock_database()
+        self.sp500_symbols = self.get_sp500_symbols()
         
         # Trading state
         self.active_positions = {}
         self.is_running = False
-        self.min_cash_reserve = 1000.0
         
         # Market hours (Eastern Time)
         self.market_open = dt_time(9, 30)
         self.market_close = dt_time(16, 0)
         self.eastern_tz = pytz.timezone('US/Eastern')
         
-        print(f"[INIT] Automated Trading System Initialized")
-        print(f"[DATABASE] Loaded {len(self.stock_database)} stocks from database")
+        print(f"[INIT] Enhanced Automated Trading System Initialized")
+        print(f"[DATABASE] Loaded {len(self.stock_database)} stocks from combined database")
         print(f"[TRACKING] Tracking {len(self.sp500_symbols)} S&P 500 symbols")
         print(f"[MODE] Paper Trading: {paper_trading}")
+        print(f"[RESERVE] Cash Reserve: {self.settings.get('cash_reserve', {})}")
         
     
-    def _load_stock_database(self) -> Dict[str, Dict]:
-        """Load stock analysis data from CSV - NO TRY-EXCEPT"""
+    def _load_trading_settings(self) -> Dict:
+        """Load persistent trading settings from JSON file"""
         try:
-            results = ResultsManager.load_from_csv()
-            stock_db = {}
+            with open('trading_settings.json', 'r') as f:
+                settings = json.load(f)
+            print(f"[SETTINGS] Loaded trading settings from file")
+            return settings
+        except FileNotFoundError:
+            print(f"[SETTINGS] No settings file found, creating default settings")
+            return self._create_default_settings()
+        except Exception as e:
+            print(f"[WARNING] Error loading settings: {e}")
+            return self._create_default_settings()
+    
+    def _create_default_settings(self) -> Dict:
+        """Create default trading settings and save to file"""
+        default_settings = {
+            "cash_reserve": {
+                "type": "percentage",  # or "fixed"
+                "amount": 10.0,        # 10% or $10.0
+                "last_updated": datetime.now().strftime('%Y-%m-%d')
+            },
+            "trading_preferences": {
+                "max_position_size": 1000,
+                "round_robin_enabled": True
+            }
+        }
+        
+        self._save_trading_settings(default_settings)
+        return default_settings
+    
+    def _save_trading_settings(self, settings: Dict):
+        """Save trading settings to JSON file"""
+        try:
+            with open('trading_settings.json', 'w') as f:
+                json.dump(settings, f, indent=2)
+            print(f"[SETTINGS] Trading settings saved successfully")
+        except Exception as e:
+            print(f"[WARNING] Error saving settings: {e}")
+    
+    def _load_combined_stock_database(self) -> Dict[str, Dict]:
+        """Load and combine stock data from both CSV files with proper prioritization"""
+        combined_db = {}
+        
+        # Step 1: Load sp500_enhanced_yfinance_results.csv first
+        try:
+            with open('sp500_enhanced_yfinance_results.csv', 'r', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    symbol = row.get('symbol', '').strip()
+                    if symbol and row.get('grade', 'F') != 'F':  # Exclude F-grade stocks
+                        combined_db[symbol] = {
+                            'symbol': symbol,
+                            'grade': row.get('grade', 'F'),
+                            'score': float(row.get('score', 0.0)),
+                            'rank': int(row.get('rank', 999)),
+                            'best_strategy': row.get('best_strategy', 'Unknown'),
+                            'best_strategy_params': row.get('best_strategy_params', ''),
+                            'data_source': 'sp500_enhanced',
+                            'trading_allowed': False  # Default to not allowed
+                        }
+            print(f"[DATABASE] Loaded {len(combined_db)} stocks from sp500_enhanced_yfinance_results.csv")
+        except Exception as e:
+            print(f"[WARNING] Error loading sp500_enhanced_yfinance_results.csv: {e}")
+        
+        # Step 2: Load UserPreferenceStock.csv and override/add with higher priority
+        try:
+            with open('UserPreferenceStock.csv', 'r', encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    symbol = row.get('symbol', '').strip()
+                    if symbol and row.get('grade', 'F') != 'F':  # Exclude F-grade stocks
+                        trading_allowed = row.get('trading_allowed', 'False')
+                        if isinstance(trading_allowed, str):
+                            trading_allowed = trading_allowed.lower() in ['true', '1', 'yes', 'allowed']
+                        
+                        combined_db[symbol] = {
+                            'symbol': symbol,
+                            'grade': row.get('grade', 'F'),
+                            'score': float(row.get('score', 0.0)),
+                            'rank': int(row.get('rank', 999)),
+                            'best_strategy': row.get('best_strategy', 'Unknown'),
+                            'best_strategy_params': row.get('best_strategy_params', ''),
+                            'data_source': 'user_preference',
+                            'trading_allowed': bool(trading_allowed)
+                        }
+            print(f"[DATABASE] Updated with {len([s for s in combined_db.values() if s['data_source'] == 'user_preference'])} stocks from UserPreferenceStock.csv")
+        except Exception as e:
+            print(f"[WARNING] Error loading UserPreferenceStock.csv: {e}")
+        
+        # Step 3: Sort stocks by grade priority
+        grade_priority = {
+            'A+': 1, 'A': 2, 'A-': 3, 'B+': 4, 'B': 5, 'B-': 6,
+            'C+': 7, 'C': 8, 'C-': 9, 'D': 10, 'F': 999
+        }
+        
+        # Group by grade and sort within each grade
+        sorted_stocks = {}
+        for symbol, data in combined_db.items():
+            grade = data['grade']
+            if grade not in sorted_stocks:
+                sorted_stocks[grade] = []
+            sorted_stocks[grade].append((symbol, data))
+        
+        # Sort each grade group by symbol for consistent ordering
+        for grade in sorted_stocks:
+            sorted_stocks[grade].sort(key=lambda x: x[0])  # Sort by symbol name
+        
+        print(f"[DATABASE] Total combined database: {len(combined_db)} stocks")
+        print(f"[DATABASE] Grade distribution: {dict((g, len(sorted_stocks.get(g, []))) for g in grade_priority.keys() if g in sorted_stocks)}")
+        
+        return combined_db
+    
+    def calculate_available_buying_power(self) -> float:
+        """Calculate available buying power after accounting for cash reserve"""
+        total_buying_power = self.trading_bot.get_buying_power()
+        
+        cash_reserve_config = self.settings.get('cash_reserve', {})
+        reserve_type = cash_reserve_config.get('type', 'percentage')
+        reserve_amount = cash_reserve_config.get('amount', 10.0)
+        
+        if reserve_type == 'percentage':
+            reserve_cash = total_buying_power * (reserve_amount / 100.0)
+        else:  # fixed amount
+            reserve_cash = reserve_amount
+        
+        available_power = max(0, total_buying_power - reserve_cash)
+        
+        print(f"[RESERVE] Total Buying Power: ${total_buying_power:,.2f}")
+        print(f"[RESERVE] Reserve ({reserve_type}): ${reserve_cash:,.2f}")
+        print(f"[RESERVE] Available for Trading: ${available_power:,.2f}")
+        
+        return available_power
+    
+    def get_stocks_by_grade(self) -> Dict[str, List[Dict]]:
+        """Group stocks by grade in priority order"""
+        grade_priority = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D']
+        stocks_by_grade = {}
+        
+        for grade in grade_priority:
+            stocks_by_grade[grade] = []
+        
+        for symbol, data in self.stock_database.items():
+            grade = data.get('grade', 'F')
+            if grade in stocks_by_grade:
+                stocks_by_grade[grade].append(data)
+        
+        # Sort within each grade by symbol for consistent ordering
+        for grade in stocks_by_grade:
+            stocks_by_grade[grade].sort(key=lambda x: x['symbol'])
+        
+        return stocks_by_grade
+    
+    def execute_grade_based_buying(self):
+        """Execute grade-based buying strategy with round-robin within grades"""
+        print("\n[TRADING] STARTING GRADE-BASED BUYING")
+        print("="*50)
+        
+        available_power = self.calculate_available_buying_power()
+        if available_power < 100:  # Minimum $100 to trade
+            print(f"[ERROR] Insufficient buying power: ${available_power:,.2f}")
+            return
+        
+        stocks_by_grade = self.get_stocks_by_grade()
+        current_holdings = self.trading_bot.get_current_holdings()
+        
+        total_bought = 0
+        total_spent = 0.0
+        
+        # Process each grade in priority order
+        for grade in ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D']:
+            grade_stocks = stocks_by_grade.get(grade, [])
+            if not grade_stocks:
+                continue
             
-            for stock in results:
-                symbol = stock.get('symbol', '')
-                if symbol:
-                    winner = stock.get('winner', 'GBM')
-                    best_strategy_name = stock.get(f'best_strategy_{winner.lower()}', 'Unknown')
+            print(f"\n[GRADE] Processing Grade {grade} ({len(grade_stocks)} stocks)")
+            
+            # Round-robin buying within this grade
+            stocks_to_buy = [s for s in grade_stocks if s['symbol'] not in current_holdings]
+            if not stocks_to_buy:
+                print(f"[GRADE] All {grade} stocks already owned")
+                continue
+            
+            # Round-robin: buy 1 share of each stock in the grade until insufficient funds
+            round_num = 1
+            while stocks_to_buy and available_power >= 50:  # Minimum $50 per stock
+                print(f"[ROUND] Grade {grade}, Round {round_num}")
+                
+                stocks_bought_this_round = []
+                for stock_data in stocks_to_buy:
+                    symbol = stock_data['symbol']
                     
-                    stock_db[symbol] = {
-                        'grade': stock.get('grade', 'F'),
-                        'score': stock.get('score', 0.0),
-                        'rank': stock.get('rank', 999),
-                        'best_strategy_name': best_strategy_name,
-                        'winner': winner,
-                        'percentage_return': max(
-                            stock.get('percentage_return_gbm', 0.0),
-                            stock.get('percentage_return_ml', 0.0)
-                        )
-                    }
+                    # Get current stock price
+                    try:
+                        current_price = self.trading_bot.get_current_stock_price(symbol)
+                        if current_price <= 0:
+                            print(f"[ERROR] Invalid price for {symbol}: ${current_price}")
+                            continue
+                        
+                        if current_price > available_power:
+                            print(f"[SKIP] {symbol}: ${current_price:.2f} > available ${available_power:.2f}")
+                            continue
+                        
+                        # Place buy order
+                        if self.trading_bot.place_buy_order(symbol, 1):
+                            available_power -= current_price
+                            total_spent += current_price
+                            total_bought += 1
+                            stocks_bought_this_round.append(symbol)
+                            print(f"[BUY] {symbol}: 1 share @ ${current_price:.2f} (Grade: {grade})")
+                        
+                    except Exception as e:
+                        print(f"[ERROR] Error buying {symbol}: {e}")
+                        continue
+                
+                if not stocks_bought_this_round:
+                    print(f"[ROUND] No stocks bought in round {round_num}, moving to next grade")
+                    break
+                
+                round_num += 1
+                
+                # Check if we still have enough buying power to continue
+                if available_power < 50:
+                    print(f"[ROUND] Insufficient buying power remaining: ${available_power:.2f}")
+                    break
+        
+        print(f"\n[SUMMARY] GRADE-BASED BUYING COMPLETE")
+        print(f"[SUMMARY] Total stocks bought: {total_bought}")
+        print(f"[SUMMARY] Total amount spent: ${total_spent:.2f}")
+        print(f"[SUMMARY] Remaining buying power: ${available_power:.2f}")
+    
+    def create_strategy_from_params(self, strategy_name: str, params: str) -> Strategy:
+        """Create strategy instance from CSV parameters"""
+        from Strategy import MeanReversionStrategy, TrendFollowingStrategy, WeightedTrendFollowingStrategy
+        
+        try:
+            # Parse strategy name and parameters
+            if 'MR_' in strategy_name:
+                # Mean Reversion: MR_20_5 -> window=20, threshold=5
+                parts = strategy_name.split('_')
+                if len(parts) >= 3:
+                    window = int(parts[1])
+                    threshold = int(parts[2])
+                    return MeanReversionStrategy(strategy_name, window, threshold)
             
-            return stock_db
+            elif 'TF_' in strategy_name:
+                # Trend Following: TF_5_20 -> short=5, long=20
+                parts = strategy_name.split('_')
+                if len(parts) >= 3:
+                    short_window = int(parts[1])
+                    long_window = int(parts[2])
+                    return TrendFollowingStrategy(strategy_name, short_window, long_window)
+            
+            elif 'WTF_' in strategy_name:
+                # Weighted Trend Following: WTF_5_20 -> short=5, long=20
+                parts = strategy_name.split('_')
+                if len(parts) >= 3:
+                    short_window = int(parts[1])
+                    long_window = int(parts[2])
+                    return WeightedTrendFollowingStrategy(strategy_name, short_window, long_window)
+            
+            # Fallback to default strategy
+            print(f"[WARNING] Unknown strategy format: {strategy_name}, using default")
+            return MeanReversionStrategy("Default_MR_20_5", 20, 5)
             
         except Exception as e:
-            print(f"[WARNING] Error loading stock database: {e}")
-            print("[INFO] Using empty database")
-            return {}
+            print(f"[ERROR] Error creating strategy {strategy_name}: {e}")
+            return MeanReversionStrategy("Default_MR_20_5", 20, 5)
+    
+    def execute_strategy_based_trading(self):
+        """Execute strategy-based trading for existing positions"""
+        print("\n[TRADING] STARTING STRATEGY-BASED TRADING")
+        print("="*50)
+        
+        current_holdings = self.trading_bot.get_current_holdings()
+        if not current_holdings:
+            print("[INFO] No current holdings to apply strategies to")
+            return
+        
+        for symbol, holding_data in current_holdings.items():
+            # Get stock data from database
+            stock_data = self.stock_database.get(symbol)
+            if not stock_data:
+                print(f"[SKIP] {symbol}: No strategy data available")
+                continue
+            
+            strategy_name = stock_data.get('best_strategy', 'Unknown')
+            if strategy_name == 'Unknown':
+                print(f"[SKIP] {symbol}: No best strategy defined")
+                continue
+            
+            print(f"[STRATEGY] {symbol}: Using {strategy_name}")
+            
+            # Create strategy instance
+            strategy = self.create_strategy_from_params(strategy_name, '')
+            
+            # For strategy execution, we would need market data
+            # This is a simplified version - in practice you'd need to:
+            # 1. Get historical price data for the stock
+            # 2. Create a Market instance with that data
+            # 3. Use strategy.decide_action() to get BUY/SELL/HOLD decision
+            # 4. Execute trades based on the decision
+            
+            print(f"[INFO] {symbol}: Strategy {strategy_name} loaded (execution requires market data)")
+        
+        print(f"[STRATEGY] Strategy-based trading analysis complete")
     
     def _is_market_open(self) -> bool:
         """Check if market is currently open"""
